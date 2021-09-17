@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"sortAlgorithms/bsort"
+	"sortAlgorithms/sort"
 	"sortAlgorithms/util"
 )
 
@@ -15,5 +15,5 @@ func main() {
 	}
 	fmt.Println()
 
-	bsort.Bubblesort(v[:], util.CompareString)
+	sort.Bubblesort(v[:], util.CompareString)
 }

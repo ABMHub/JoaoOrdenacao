@@ -1,4 +1,4 @@
-package bsort
+package sort
 
 import (
 	"fmt"

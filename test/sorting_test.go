@@ -1,7 +1,7 @@
 package test
 
 import (
-	"sortAlgorithms/bsort"
+	"sortAlgorithms/sort"
 	"sortAlgorithms/util"
 	"testing"
 )
@@ -32,9 +32,19 @@ func TestSorted(t *testing.T) {
 		x[i], x[j] = x[j], x[i]
 	}
 
-	bsort.Bubblesort(x, util.CompareInt)
+	sort.Bubblesort(x, util.CompareInt)
 
 	if !util.IsSorted(x, util.CompareInt) {
 		t.Error("Bubblesort falhou em ordenar")
+	}
+
+	for i, j := 0, len(x)-1; i < j; i, j = i+1, j-1 {
+		x[i], x[j] = x[j], x[i]
+	}
+
+	sort.Mergesort(x, 0, len(x)-1)
+
+	if !util.IsSorted(x, util.CompareInt) {
+		t.Error("Merge falhou em ordenar")
 	}
 }
