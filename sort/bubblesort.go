@@ -1,7 +1,6 @@
 package sort
 
 import (
-	"fmt"
 	"sortAlgorithms/util"
 )
 
@@ -12,14 +11,14 @@ func Bubblesort(v []util.T, cmp func(util.T, util.T) bool) {
 	for !flag {
 		flag = true
 		for i := 0; i < v_size-1; i++ {
-			if cmp(v[i], v[i+1]) {
+			if !cmp(v[i], v[i+1]) {
 				flag = false
 				v[i], v[i+1] = v[i+1], v[i]
 			}
 		}
 	}
 
-	for i := 0; i < v_size; i++ {
-		fmt.Printf("%s ", v[i])
-	}
+	// for i := 0; i < v_size; i++ {
+	// 	fmt.Printf("%s ", v[i])
+	// }
 }

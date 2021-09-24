@@ -2,8 +2,7 @@ package sort
 
 import (
 	"sortAlgorithms/util"
-	//"runtime"
-	"sync"
+//	"sync"
 )
 
 func Mergesort_F(arr []util.T, begin, end int, cmp func(util.T, util.T)bool) {
@@ -11,18 +10,13 @@ func Mergesort_F(arr []util.T, begin, end int, cmp func(util.T, util.T)bool) {
 	if begin >= end {
 		return
 	}
-
-	var tg sync.WaitGroup
 	var mid int = (begin + end) / 2
 
-	tg.Add(1)
-	
-	go func(arr []util.T, begin,mid, end int, cmp func(util.T, util.T)bool){
-		defer tg.Done()
+	gr := func(){
 		Mergesort_F(arr, begin, mid,cmp)
 		Mergesort_F(arr, mid+1, end,cmp)
-	}(arr,begin,mid,end,cmp)
-	tg.Wait()
+	}
+	util.Semaforo(gr)
 
 	merge_F(arr, begin, mid, end,cmp)
 }
