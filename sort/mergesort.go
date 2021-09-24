@@ -4,22 +4,18 @@ import (
 	"sortAlgorithms/util"
 )
 
-func Mergesort(arr []util.T, begin, end int) {
+func Mergesort(arr []util.T, begin, end int, cmp func(util.T, util.T) bool) {
 	if begin >= end {
 		return
 	}
 
 	var mid int = (begin + end) / 2
-	Mergesort(arr, begin, mid)
-	Mergesort(arr, mid+1, end)
-	merge(arr, begin, mid, end)
+	Mergesort(arr, begin, mid, cmp)
+	Mergesort(arr, mid+1, end, cmp)
+	merge(arr, begin, mid, end, cmp)
 }
 
-func cmp(a, b util.T) bool {
-	return a.(int) < b.(int)
-}
-
-func merge(arr []util.T, begin, mid, end int) {
+func merge(arr []util.T, begin, mid, end int, cmp func(util.T, util.T) bool) {
 	temp := make([]util.T, end-begin+1)
 
 	var i int = begin
