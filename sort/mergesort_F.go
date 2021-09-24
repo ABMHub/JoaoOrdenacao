@@ -2,14 +2,11 @@ package sort
 
 import (
 	"sortAlgorithms/util"
-	"runtime"
+	//"runtime"
 	"sync"
 )
 
 func Mergesort_F(arr []util.T, begin, end int, cmp func(util.T, util.T)bool) {
-	if begin == 0 && end == len(arr)-1{
-		runtime.GOMAXPROCS(3) // aloca 
-	}
 
 	if begin >= end {
 		return
@@ -25,7 +22,6 @@ func Mergesort_F(arr []util.T, begin, end int, cmp func(util.T, util.T)bool) {
 		Mergesort_F(arr, begin, mid,cmp)
 		Mergesort_F(arr, mid+1, end,cmp)
 	}(arr,begin,mid,end,cmp)
-
 	tg.Wait()
 
 	merge_F(arr, begin, mid, end,cmp)
