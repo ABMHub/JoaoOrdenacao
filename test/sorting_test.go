@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var v [5]string = [5]string{"lucas", "joao victor", "joao pedro", "aleq", "maria eduarda"}
+var v []util.T = []util.T{"lucas", "joao victor", "joao pedro", "aleq", "maria eduarda"}
 
 func TestCompare(t *testing.T) {
 	x := []util.T{10, 20, 30, 40, 50}
@@ -23,11 +23,11 @@ func TestCompare(t *testing.T) {
 		t.Errorf("Erro no CompareInt, %d < %d eh verdadeiro", x[4], x[4])
 	}
 
-	if util.CompareString(v[3], v[1]) {
+	if !util.CompareString(v[3], v[1]) {
 		t.Errorf("Erro no CompareString, %s < %s eh falso", v[3], v[1])
 	}
 
-	if util.CompareString(v[2], v[1]) {
+	if !util.CompareString(v[2], v[1]) {
 		t.Errorf("Erro no CompareString, %s < %s eh falso", v[2], v[1])
 	}
 
@@ -59,6 +59,12 @@ func TestSorted(t *testing.T) {
 	sort.Mergesort(x, 0, len(x)-1, util.CompareInt)
 
 	if !util.IsSorted(x, util.CompareInt) {
+		t.Error("Merge falhou em ordenar")
+	}
+
+	sort.Mergesort(v, 0, len(x)-1, util.CompareString)
+
+	if !util.IsSorted(v, util.CompareString) {
 		t.Error("Merge falhou em ordenar")
 	}
 }
