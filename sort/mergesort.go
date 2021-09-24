@@ -15,7 +15,6 @@ func Mergesort(arr []util.T, begin, end int, cmp func(util.T, util.T) bool) {
 	merge(arr, begin, mid, end, cmp)
 }
 
-
 func merge(arr []util.T, begin, mid, end int, cmp func(util.T, util.T) bool) {
 	temp := make([]util.T, end-begin+1)
 

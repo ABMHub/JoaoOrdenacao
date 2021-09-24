@@ -2,26 +2,25 @@ package sort
 
 import (
 	"sortAlgorithms/util"
-//	"sync"
 )
 
-func Mergesort_F(arr []util.T, begin, end int, cmp func(util.T, util.T)bool) {
+func Mergesort_F(arr []util.T, begin, end int, cmp func(util.T, util.T) bool) {
 
 	if begin >= end {
 		return
 	}
 	var mid int = (begin + end) / 2
 
-	gr := func(){
-		Mergesort_F(arr, begin, mid,cmp)
-		Mergesort_F(arr, mid+1, end,cmp)
+	gr := func() {
+		Mergesort_F(arr, begin, mid, cmp)
+		Mergesort_F(arr, mid+1, end, cmp)
 	}
 	util.Semaforo(gr)
 
-	merge_F(arr, begin, mid, end,cmp)
+	merge_F(arr, begin, mid, end, cmp)
 }
 
-func merge_F(arr []util.T, begin, mid, end int,cmp func(util.T, util.T)bool) {
+func merge_F(arr []util.T, begin, mid, end int, cmp func(util.T, util.T) bool) {
 	temp := make([]util.T, end-begin+1)
 
 	var i int = begin
