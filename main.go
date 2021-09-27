@@ -1,5 +1,10 @@
 package main
 
+import (
+	"sortAlgorithms/sort"
+	"sortAlgorithms/util"
+)
+
 // 	"os"
 // "sortAlgorithms/sort"
 // "sortAlgorithms/util"
@@ -16,6 +21,7 @@ func main() {
 	// for i := range arr {
 	// 	fmt.Println(arr[i])
 	// }
-	// sort.Merge_Files(util.ReadIntegers, "wakawaka", 4)
+	size := 4
+	sort.Merge_Files(util.ReadIntegers, "merge-sort", size, 1000, util.CompareInt)
 	// file, err := os.Open("integerscpp.bin")
 }

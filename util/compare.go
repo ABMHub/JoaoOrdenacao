@@ -5,9 +5,9 @@ func CompareString(a, b T) bool {
 }
 
 func CompareInt(a, b T) bool {
-	return a.(int) < b.(int)
+	return a.(uint32) < b.(uint32)
 }
 
 func CompareFloat(a, b T) bool {
-	return a.(int) < b.(int)
+	return a.(int) < b.(int) //deixa baixo
 }

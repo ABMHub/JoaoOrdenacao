@@ -1,9 +1,11 @@
 package test
 
 import (
+	"fmt"
 	"sortAlgorithms/sort"
 	"sortAlgorithms/util"
 	"testing"
+	"time"
 )
 
 var v []util.T = []util.T{"lucas", "joao victor", "joao pedro", "aleq", "maria eduarda"}
@@ -56,7 +58,9 @@ func TestSorted(t *testing.T) {
 		x[i], x[j] = x[j], x[i]
 	}
 
+	start := time.Now()
 	sort.Mergesort(x, 0, len(x)-1, util.CompareInt)
+	fmt.Println(time.Since(start))
 
 	if !util.IsSorted(x, util.CompareInt) {
 		t.Error("Merge falhou em ordenar")
