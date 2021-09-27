@@ -1,0 +1,42 @@
+#include <bits/stdc++.h>
+typedef long long ll;
+
+using namespace std;
+
+// nao rode esse programa no windows, os numeros gerados serao pequenos
+int main () {
+  cout << "Quantos inteiros voce quer?\n";
+  long long n;
+  cin >> n;
+  cout << "1 - 32bits\n";
+  cout << "2 - 64bits\n";
+
+  int op;
+  cin >> op;
+  if (op != 1 && op != 2) return 0;
+
+  int a[n];
+  for (int i = 0 ; i < n ; i++) {
+    a[i] = i+1;
+  }
+
+  // ofstream file("integerscpp.txt", ios::binary);
+  // srand (time(NULL));
+  // if (op == 1)
+  //   for (int i = 0; i < n; i++)
+  //     file << rand() << endl;
+
+  // else
+  //   for (int i = 0; i < n; i++)
+  //     file << ll(ll(rand()) * ll(rand())) << endl;
+  // file.close();
+
+  FILE * f;
+  f = fopen("integerscpp.bin", "wb");
+  for (int i = 0; i < n; i++) {
+    fwrite(&a, sizeof(int), n, f);
+  }
+  fclose(f);
+
+  return 0;
+}
