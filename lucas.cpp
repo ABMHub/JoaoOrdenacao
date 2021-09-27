@@ -33,9 +33,9 @@ int main () {
 
   FILE * f;
   f = fopen("integerscpp.bin", "wb");
-  for (int i = 0; i < n; i++) {
+  // for (int i = 0; i < n; i++) {
     fwrite(&a, sizeof(int), n, f);
-  }
+  // }
   fclose(f);
 
   return 0;

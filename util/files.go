@@ -17,9 +17,9 @@ func ReadBytes(file *os.File, qtdBytes int) []byte {
 	return bytes
 }
 
-func ReadIntegers(file *os.File, num int) []T {
+func ReadIntegers(file *os.File, num int64) []T {
 	arr := make([]T, num)
-	for i := 0; i < num; i++ {
+	for i := int64(0); i < num; i++ {
 		arr[i] = T(binary.LittleEndian.Uint32(ReadBytes(file, 4)))
 	}
 	return arr
