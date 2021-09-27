@@ -17,7 +17,7 @@ func ResetThreadCounter(){
 	__T_counter__=0
 }
 
-func Semaforo(groutine func()){
+func Semaforo(n int, groutine ...func()){
 	if(__T_counter__ < __T_limit){
 		var tg sync.WaitGroup
 		tg.Add(1)
@@ -26,13 +26,19 @@ func Semaforo(groutine func()){
 		
 		go func(){
 			defer tg.Done()
-			groutine()
+			for i := 0; i < n; i++{
+				groutine[i]()
+			}
 		}()
-		
+		for i := n; i < len(groutine); i++{
+			groutine[i]()
+		}
 		tg.Wait()	
 		
 		__T_counter__--
 	}else{
-		groutine()	
+		for i := 0; i < len(groutine); i++{
+			groutine[i]()
+		}
 	}
 }	
