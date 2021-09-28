@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"os"
 	"sortAlgorithms/sort"
 	"sortAlgorithms/util"
 )
@@ -24,4 +27,12 @@ func main() {
 	size := 4
 	sort.Merge_Files(util.ReadIntegers, "merge-sort", size, 1000, util.CompareInt)
 	// file, err := os.Open("integerscpp.bin")
+
+	file, err := os.Open("temp/out0.bin") // abre arquivo
+	if err != nil {                         // se der erro cancela tudo
+		log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err) //
+		defer file.Close()                                   //
+	}
+	
+	fmt.Println(util.ReadIntegers(file, 10))
 }

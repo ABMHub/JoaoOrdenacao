@@ -4,17 +4,19 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-
+	"bytes"
 	"log"
 	"os"
 )
+
+var network bytes.Buffer
 
 //Recebe o arquivo a ser lido e o tamanho em bytes do elemento que deve ser lido
 func ReadBytes(file *os.File, qtdBytes int) ([]byte, error) {
 	bytes := make([]byte, qtdBytes) //Vetor com os bytes do elemento
 
 	_, err := file.Read(bytes) //Le do arquivo
-	if err != nil {            //Se encontrar um erro, printa uma mensagem de erro
+	if err != nil && err != io.EOF {            //Se encontrar um erro, printa uma mensagem de erro
 		fmt.Println("ReadBytes Linha 16, Erro ao ler o arquivo binário")
 		log.Fatal(err)
 	}
