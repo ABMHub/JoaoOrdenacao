@@ -12,19 +12,20 @@ import (
 
 func main() {
 	file,_ := os.Open("ints.txt")
-	util.SetThreadLimit(6)
+	util.SetThreadLimit(8)
 	temp := make([]byte, 4)
 	arr := make([]util.T,1e6)
 	for i := 0; i < 1e6; i++{
 		file.Read(temp)
 		arr[i] = int(binary.BigEndian.Uint32(temp))
 	}
+	fmt.Println(arr[len(arr)-1])
 	start := time.Now()
 	for i := 0; i < 10; i++{
-		fmt.Println(i)
-		sort.Mergesort_F(arr, 0, len(arr)-1, func(a, b util.T) bool {
+		sort.Mergesort_P(arr,func(a, b util.T) bool {
 			return a.(int) < b.(int)
 		})
+		fmt.Println(i)
 	}
 	fmt.Println(time.Since(start))
 }

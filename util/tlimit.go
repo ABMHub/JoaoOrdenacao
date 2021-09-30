@@ -13,6 +13,10 @@ func SetThreadLimit(limit int){
 	}
 }
 
+func GetThreadLimit()int{
+	return __T_limit
+}
+
 func ResetThreadCounter(){
 	__T_counter__=0
 }
