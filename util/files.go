@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-
+	"math/rand"
 	//"log"
 	"os"
 )
@@ -55,4 +55,19 @@ func ReadIntegers(file *os.File, num int64) []T {
 
 	//Retorna os vetor com os elementos da leitura
 	return arr
+}
+
+func GenerateFiles (n int64) {
+	ptr, err := os.Create("IntegersGo.bin")
+	if err != nil {
+		fmt.Println("erro")
+	}
+
+	var i int64
+	for i = 0; i < n; i++ {
+		err := binary.Write(ptr, binary.LittleEndian, uint32(rand.Int()))
+		if err != nil {
+			fmt.Println("binary.Write failed:", err)
+		}
+	} 
 }

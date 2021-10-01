@@ -18,14 +18,12 @@ import (
 var wg sync.WaitGroup
 
 var cond_files = &sync.Cond{} //variavel condicao para os arquivos
-var locker sync.Locker
 
 var queueLock = &sync.Mutex{}
 
 const sem_permissions_RAS int = 2 //numero de permissoes que o semaforo Read_And_Sort
 var sem_RAS *(semaphore.Weighted) //controla as threads Read_And_Sort
 
-const sem_permissions_files int = 0 //numero de permissoes do semaforo sem_files
 //var sem_files *(semaphore.Weighted)		//semaforo que controla os arquivos que ja podem ser mesclados
 
 var count_files int //quantidade de arquivos temporarios

@@ -20,23 +20,23 @@ int main () {
     a[i] = rand();
   }
 
-  // ofstream file("integerscpp.txt", ios::binary);
-  // srand (time(NULL));
-  // if (op == 1)
-  //   for (int i = 0; i < n; i++)
-  //     file << rand() << endl;
+  ofstream file("integerscpp.txt", ios::binary);
+  srand (time(NULL));
+  if (op == 1)
+    for (int i = 0; i < n; i++)
+      file << rand() << endl;
 
-  // else
-  //   for (int i = 0; i < n; i++)
-  //     file << ll(ll(rand()) * ll(rand())) << endl;
-  // file.close();
+  else
+    for (int i = 0; i < n; i++)
+      file << ll(ll(rand()) * ll(rand())) << endl;
+  file.close();
 
-  FILE * f;
-  f = fopen("integerscpp2.bin", "wb");
-  // for (int i = 0; i < n; i++) {
-    fwrite(&a, sizeof(int), n, f);
-  // }
-  fclose(f);
+  // FILE * f;
+  // f = fopen("integerscpp2.bin", "wb");
+  // // for (int i = 0; i < n; i++) {
+  //   fwrite(&a, sizeof(int), n, f);
+  // // }
+  // fclose(f);
 
   return 0;
 }
