@@ -1,7 +1,6 @@
 package sort
 
 import (
-	"encoding/binary"
 	"context"
 	"fmt"
 	"log"
@@ -10,8 +9,6 @@ import (
 	"sortAlgorithms/util"
 	"strconv"
 	"sync"
-	"bytes"
-	"encoding/gob"
 
 	"golang.org/x/sync/semaphore"
 )
@@ -36,7 +33,6 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 	file.Seek(int64(page)*fileLimit, 0)                 //posiciona o ponteiro onde o arquivo deve ser lido
 	arr := readData(file, fileLimit/(int64(elem_size))) //le os dados a partir da posicao definida
 
-	
 	//ordena os dados lidos
 	switch sortAlg {
 	case "quick-sort":
@@ -48,26 +44,27 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 	}
 
 	//Cria um diretorio onde serao salvos os arquivos temporarios caso ele ainda nao exista
-	//err = os.Mkdir("temp", 0755)
+	// err = os.Mkdir("temp", 0755)
 	// if err != nil {
-	// 	fmt.Println("A pasta ja existia", err)
+	//  	fmt.Println("A pasta ja existia", err)
 	// }
-	os.Mkdir("temp", 0755)
 
+	os.Mkdir("temp", 0755)
 	//Cria um arquivo temporario
 	fout, err := os.Create("temp" + string(os.PathSeparator) + "out" + strconv.Itoa(page) + ".bin")
 	if err != nil {
-		fmt.Println("Nao foi possivel criar o arquivo temporario" + strconv.Itoa(page), err)
+		fmt.Println("Nao foi possivel criar o arquivo temporario"+strconv.Itoa(page), err)
 		//return
 	}
 
-	//codigo experimental
-	var buf bytes.Buffer
-    enc := gob.NewEncoder(&buf)
-    enc.Encode(arr)
-	err = binary.Write(fout, binary.LittleEndian, buf.Bytes())
+	util.WriteIntegers(fout, arr)
+	// codigo experimental
+	// var buf bytes.Buffer
+	// enc := gob.NewEncoder(&buf)
+	// enc.Encode(arr)
+
 	if err != nil {
-		fmt.Println("Nao foi possivel escrever no arquivo temporario" + strconv.Itoa(page), err)
+		fmt.Println("Nao foi possivel escrever no arquivo temporario"+strconv.Itoa(page), err)
 		//fout.Close()
 		//return
 	}
@@ -91,7 +88,7 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 	file, err := os.Open("integerscpp.bin") // abre arquivo
 	if err != nil {                         // se der erro cancela tudo
 		log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err) //
-		defer file.Close()                                   //
+		defer file.Close()                                                                     //
 	}
 
 	stat, _ := file.Stat()
@@ -99,7 +96,7 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 	unidade := 3
 	//dataNumber := int(math.Floor(math.Pow(2, float64(unidade)) / float64(size))) * 10 // qtd de file descriptors
 	fds_qtd := int(math.Floor(float64(stat.Size())/math.Pow(10, float64(unidade)))) / size
-	file_limit := stat.Size()/int64(fds_qtd)
+	file_limit := stat.Size() / int64(fds_qtd)
 	//fileLimit := int64(size * dataNumber)                          // numero em bytes do offset do seek
 	fmt.Println(file_limit)
 	sem = semaphore.NewWeighted(8) // semaphoro com 8 permissoes

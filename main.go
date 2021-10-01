@@ -28,11 +28,11 @@ func main() {
 	sort.Merge_Files(util.ReadIntegers, "merge-sort", size, 1000, util.CompareInt)
 	// file, err := os.Open("integerscpp.bin")
 
-	file, err := os.Open("temp/out0.bin") // abre arquivo
-	if err != nil {                         // se der erro cancela tudo
+	file, err := os.Open("temp/out1.bin") // abre arquivo
+	if err != nil {                       // se der erro cancela tudo
 		log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err) //
-		defer file.Close()                                   //
+		defer file.Close()                                                                     //
 	}
-	
+
 	fmt.Println(util.ReadIntegers(file, 10))
 }
