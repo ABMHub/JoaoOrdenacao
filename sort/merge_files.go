@@ -15,6 +15,7 @@ import (
 )
 
 //var queueLock = &sync.Mutex{}
+const sem_permissions int = 2
 var sem *(semaphore.Weighted)
 
 func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(util.T, util.T) bool, file1, file2 *os.File, qtdMaxElem int64) {
@@ -107,6 +108,10 @@ func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(uti
 	}
 }
 
+/*
+	Recebe como parametro um arquivo e um indice (page) a partir de qual parte desse arquivo
+	deve ordenar
+*/
 func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg string, readData func(file *os.File, num int64) []util.T, cmp func(util.T, util.T) bool) {
 	file, err := os.Open(file_name)
 	if err != nil {
@@ -127,43 +132,20 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 		Mergesort_F(arr, 0, len(arr)-1, cmp)
 	}
 
-	//Cria um diretorio onde serao salvos os arquivos temporarios caso ele ainda nao exista
-	// err = os.Mkdir("temp", 0755)
-	// if err != nil {
-	//  	fmt.Println("A pasta ja existia", err)
-	// }
-
+	//Cria uma pasta temporaria
 	os.Mkdir("temp", 0755)
 	//Cria um arquivo temporario
 	fout, err := os.Create("temp" + string(os.PathSeparator) + "out" + strconv.Itoa(page) + ".bin")
 	if err != nil {
 		fmt.Println("Nao foi possivel criar o arquivo temporario"+strconv.Itoa(page), err)
-		//return
 	}
 
 	util.WriteIntegers(fout, arr)
-	// codigo experimental
-	// var buf bytes.Buffer
-	// enc := gob.NewEncoder(&buf)
-	// enc.Encode(arr)
 
 	if err != nil {
 		fmt.Println("Nao foi possivel escrever no arquivo temporario"+strconv.Itoa(page), err)
-		//fout.Close()
-		//return
 	}
 
-	//fim do codigo experimental
-
-	//Escreve os dados no arquivo temporario
-	// err = binary.Write(fout, binary.LittleEndian, arr)
-	// if err != nil {
-	// 	fmt.Println("Nao foi possivel escrever no arquivo temporario" + strconv.Itoa(page), err)
-	// 	//fout.Close()
-	// 	//return
-	// }
-
-	//Fecha o arquivo e libera uma posicao no semaforo
 	fout.Close()
 	sem.Release(1)
 }
@@ -183,12 +165,13 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 	file_limit := stat.Size() / int64(fds_qtd)
 	//fileLimit := int64(size * dataNumber)                          // numero em bytes do offset do seek
 	fmt.Println(file_limit)
-	sem = semaphore.NewWeighted(8) // semaphoro com 8 permissoes
+	sem = semaphore.NewWeighted(int64(sem_permissions)) // semaphoro com int64(sem_permissions) permissoes
 	ctx := context.Background()    // nao sei????????? (necessario pro sem.acquire)
 
 	for i := 0; i < fds_qtd; i++ {
 		sem.Acquire(ctx, 1) // pega uma permissao do sem
-		Read_And_Sort(i, size, file_limit, "integerscpp2.bin", sortAlg, readData, cmp)
+		go Read_And_Sort(i, size, file_limit, "integerscpp2.bin", sortAlg, readData, cmp)
+		fmt.Println("Hey you")
 	}
 
 }
