@@ -8,13 +8,13 @@ import (
 	"os"
 	"sortAlgorithms/util"
 	"strconv"
-	"strings"
 	"sync"
 
 	//"sync"
 
 	"golang.org/x/sync/semaphore"
 )
+
 var wg sync.WaitGroup
 
 var cond_files = &sync.Cond{} //variavel condicao para os arquivos
@@ -32,7 +32,17 @@ var count_files int //quantidade de arquivos temporarios
 //Fila com os arquivos prontos
 var files_queue util.List
 
-func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(util.T, util.T) bool, file1, file2 *os.File, qtdMaxElem int64, output_name string) {
+func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(util.T, util.T) bool, file1_n, file2_n string, qtdMaxElem int64, output_name string) {
+	file1, err1 := os.Open("temp" + string(os.PathSeparator) + file1_n + ".bin") // abre arquivo
+	if err1 != nil {
+		log.Fatal(err1)
+	}
+
+	file2, err2 := os.Open("temp" + string(os.PathSeparator) + file2_n + ".bin") // abre arquivo
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
 	//Cria o arquivo com o output
 	folder := "temp" + string(os.PathSeparator)
 	//path := output_name + ".bin"
@@ -87,7 +97,7 @@ func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(uti
 		}
 	}
 
-	if len(outArr) != 0 { //Se o vetor de output não for vazio, escreve no arquivo de output
+	if len(outArr) != 0 { //Se o vetor de output nÃ£o for vazio, escreve no arquivo de output
 		//Escreve os dados no arquivo output
 		util.WriteIntegers(fileO, outArr)
 	}
@@ -133,8 +143,17 @@ func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(uti
 	cond_files.L.Unlock()
 	//queueLock.Unlock()
 
+	//Fecha os arquivos
+	file1.Close()
+	file2.Close()
+
+	//Deleta os arquivos que foram mesclados
+	fmt.Println("f1: ", file1_n, "f2:", file2_n)
+	os.Remove("temp" + string(os.PathSeparator) + file1_n + ".bin") // deleta arquivo
+	os.Remove("temp" + string(os.PathSeparator) + file2_n + ".bin") // deleta arquivo
+
 	sem_RAS.Release(1)
-	wg.Done()						//Sinaliza que a thread acabou
+	wg.Done() //Sinaliza que a thread acabou
 }
 
 /*
@@ -228,17 +247,19 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 	//semaforo que controla as threads do merge arrays
 	//sem_files = semaphore.NewWeighted(int64(sem_permissions_files))
 
+	var i int
 	//fragmenta e ordena os arquivos
-	for i := 0; i < fds_qtd; i++ {
+	for i = 0; i < fds_qtd; i++ {
 		sem_RAS.Acquire(ctx, 1) // pega uma permissao do sem
 		go Read_And_Sort(i, size, file_limit, "integerscpp2.bin", sortAlg, readData, cmp)
 		fmt.Println("Hey you")
 	}
 
+	var output_name string
 	//controla a mesclagem de arquivos
 
 	for count := 0; count < fds_qtd-1; count += 1 {
-		
+
 		sem_RAS.Acquire(ctx, 1) //Garante que o numero de threads esteja dentro do permitido
 
 		//Chama o procedimento que mescla os arquivos
@@ -265,15 +286,18 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 		// queueLock.Unlock()
 
 		//obtem os ponteiros dos arquivos 1 e 2
-		file1, _ := os.Open("temp" + string(os.PathSeparator) + file1_name + ".bin") // abre arquivo
-		file2, _ := os.Open("temp" + string(os.PathSeparator) + file2_name + ".bin") // abre arquivo
+		// file1, _ := os.Open("temp" + string(os.PathSeparator) + file1_name + ".bin") // abre arquivo
+		// file2, _ := os.Open("temp" + string(os.PathSeparator) + file2_name + ".bin") // abre arquivo
 
-		output_name := file1_name + "_" + (strings.Split(file2_name, "t"))[1]
-
+		output_name = "out" + strconv.Itoa(i)
+		i++
 		wg.Add(1)
-		go Merge_arrays(util.ReadIntegers, util.CompareInt, file1, file2, 1000, output_name) 
+		go Merge_arrays(util.ReadIntegers, util.CompareInt, file1_name, file2_name, 1000, output_name)
 	}
 
-	wg.Wait()					//Espera todo mundo terminar
-	
+	wg.Wait() //Espera todo mundo terminar
+
+	//Renomeia o arquivo, move ele pra raiz e deleta a temp
+	os.Rename("temp"+string(os.PathSeparator)+output_name+".bin", "."+string(os.PathSeparator)+"Sorted"+".bin")
+	os.Remove("temp")
 }
