@@ -8,28 +8,35 @@ import (
 	"os"
 	"sortAlgorithms/util"
 	"strconv"
-	"sync"
 	"strings"
+	"sync"
 
 	//"sync"
 
 	"golang.org/x/sync/semaphore"
 )
+var wg sync.WaitGroup
+
+var cond_files = &sync.Cond{} //variavel condicao para os arquivos
+var locker sync.Locker
 
 var queueLock = &sync.Mutex{}
 
-const sem_permissions_RAS int = 2		//numero de permissoes que o semaforo Read_And_Sort
-var sem_RAS *(semaphore.Weighted)		//controla as threads Read_And_Sort
+const sem_permissions_RAS int = 2 //numero de permissoes que o semaforo Read_And_Sort
+var sem_RAS *(semaphore.Weighted) //controla as threads Read_And_Sort
 
-const sem_permissions_files int = 0		//numero de permissoes do semaforo sem_files
-var sem_files *(semaphore.Weighted)		//semaforo que controla os arquivos que ja podem ser mesclados
+const sem_permissions_files int = 0 //numero de permissoes do semaforo sem_files
+//var sem_files *(semaphore.Weighted)		//semaforo que controla os arquivos que ja podem ser mesclados
 
+var count_files int //quantidade de arquivos temporarios
 //Fila com os arquivos prontos
 var files_queue util.List
 
 func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(util.T, util.T) bool, file1, file2 *os.File, qtdMaxElem int64, output_name string) {
 	//Cria o arquivo com o output
-	fileO, err := os.Create("temp" + string(os.PathSeparator) + output_name + ".bin")
+	folder := "temp" + string(os.PathSeparator)
+	//path := output_name + ".bin"
+	fileO, err := os.Create(folder + output_name + ".bin")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -114,6 +121,20 @@ func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(uti
 		util.WriteIntegers(fileO, inArr2)
 		inArr2 = nil //Zera o vetor do arquivo 2
 	}
+
+	//queueLock.Lock()
+	cond_files.L.Lock()
+	files_queue.Push_back(output_name)
+	//sem_files.Release(1)			//Significa que um arquivo foi adicionado na fila
+	count_files += 1 //Incrementa o numero de arquivos prontos
+	if count_files >= 2 {
+		cond_files.Signal()
+	}
+	cond_files.L.Unlock()
+	//queueLock.Unlock()
+
+	sem_RAS.Release(1)
+	wg.Done()						//Sinaliza que a thread acabou
 }
 
 /*
@@ -144,10 +165,11 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 	os.Mkdir("temp", 0755)
 
 	//define o nome do arquivo e sua path
-	path := "temp" + string(os.PathSeparator) + "out" + strconv.Itoa(page) + ".bin"
+	folder := "temp" + string(os.PathSeparator)
+	path := "out" + strconv.Itoa(page)
 
 	//Cria um arquivo temporario
-	fout, err := os.Create(path)
+	fout, err := os.Create(folder + path + ".bin")
 	if err != nil {
 		fmt.Println("Nao foi possivel criar o arquivo temporario"+strconv.Itoa(page), err)
 	}
@@ -155,10 +177,16 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 	util.WriteIntegers(fout, arr)
 
 	//Coloca a path do arquivo ordenado, lock porque eh regiao critica
-	queueLock.Lock()
+	//queueLock.Lock()
+	cond_files.L.Lock()
 	files_queue.Push_back(path)
-	sem_files.Release(1)			//Significa que um arquivo foi adicionado na fila
-	queueLock.Unlock()
+	//sem_files.Release(1)			//Significa que um arquivo foi adicionado na fila
+	count_files += 1 //Incrementa o numero de arquivos prontos
+	if count_files >= 2 {
+		cond_files.Signal()
+	}
+	cond_files.L.Unlock()
+	//queueLock.Unlock()
 
 	if err != nil {
 		fmt.Println("Nao foi possivel escrever no arquivo temporario"+strconv.Itoa(page), err)
@@ -169,8 +197,12 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 }
 
 func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg string, size int, memMax int, cmp func(util.T, util.T) bool) {
+	//Inicializa a variavel condicao
+	cond_files = sync.NewCond(queueLock)
+
 	//Inicializa a fila que vai conter os arquivos ja ordenados
 	files_queue = util.NewList()
+	count_files = 0
 
 	file, err := os.Open("integerscpp2.bin") // abre arquivo
 	if err != nil {                          // se der erro cancela tudo
@@ -186,16 +218,16 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 	file_limit := stat.Size() / int64(fds_qtd)
 	//fileLimit := int64(size * dataNumber)                          // numero em bytes do offset do seek
 	fmt.Println(file_limit)
-	
+
 	//Contexto da thread principal
-	ctx := context.Background() 
+	ctx := context.Background()
 
 	//semaforo que controla as threads da read and sort
-	sem_RAS = semaphore.NewWeighted(int64(sem_permissions_RAS)) 
-	
+	sem_RAS = semaphore.NewWeighted(int64(sem_permissions_RAS))
+
 	//semaforo que controla as threads do merge arrays
-	sem_files = semaphore.NewWeighted(int64(sem_permissions_files))
-	
+	//sem_files = semaphore.NewWeighted(int64(sem_permissions_files))
+
 	//fragmenta e ordena os arquivos
 	for i := 0; i < fds_qtd; i++ {
 		sem_RAS.Acquire(ctx, 1) // pega uma permissao do sem
@@ -203,31 +235,45 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 		fmt.Println("Hey you")
 	}
 
-	
-	for count := 0; count < fds_qtd-1 ; count+=1 {
-		sem_RAS.Acquire(ctx, 1)	//Garante que o numero de threads esteja dentro do permitido
+	//controla a mesclagem de arquivos
+
+	for count := 0; count < fds_qtd-1; count += 1 {
+		
+		sem_RAS.Acquire(ctx, 1) //Garante que o numero de threads esteja dentro do permitido
 
 		//Chama o procedimento que mescla os arquivos
 
 		//So acontece quando pelo menos dois arquivos estiverem prontos
-		sem_files.Acquire(ctx, 2)
-		
-		//obtem o nome dos dois arquivos que serao mesclados
-		queueLock.Lock()
+		//sem_files.Acquire(ctx, 2)
+		//queueLock.Lock()
+		cond_files.L.Lock()
+
+		for count_files < 2 {
+			cond_files.Wait()
+		}
 		file1_name := (files_queue.Pop_back()).(string)
 		file2_name := (files_queue.Pop_back()).(string)
-		queueLock.Unlock()
-		
-		//obtem os ponteiros dos arquivos 1 e 2
-		file1, _ := os.Open(file1_name) // abre arquivo
-		file2, _ := os.Open(file2_name) // abre arquivo
-		
-		output_name := (strings.Split(file1_name, "."))[0] + "_" + (strings.Split(strings.Split(file2_name, ".")[0], "out"))[1]
+		count_files -= 2
 
-		go Merge_arrays(util.ReadIntegers, util.CompareInt, file1, file2, 1000, output_name)
+		cond_files.L.Unlock()
+		//queueLock.Unlock()
+		//obtem o nome dos dois arquivos que serao mesclados
+		// queueLock.Lock()
+		// file1_name := (files_queue.Pop_back()).(string)
+		// file2_name := (files_queue.Pop_back()).(string)
+		// count_files -= 2
+		// queueLock.Unlock()
+
+		//obtem os ponteiros dos arquivos 1 e 2
+		file1, _ := os.Open("temp" + string(os.PathSeparator) + file1_name + ".bin") // abre arquivo
+		file2, _ := os.Open("temp" + string(os.PathSeparator) + file2_name + ".bin") // abre arquivo
+
+		output_name := file1_name + "_" + (strings.Split(file2_name, "t"))[1]
+
+		wg.Add(1)
+		go Merge_arrays(util.ReadIntegers, util.CompareInt, file1, file2, 1000, output_name) 
 	}
 
-
-
-
+	wg.Wait()					//Espera todo mundo terminar
+	
 }

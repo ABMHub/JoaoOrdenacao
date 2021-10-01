@@ -1,9 +1,9 @@
 package main
 
 import (
-	//"fmt"
-	//"log"
-	//"os"
+	// "fmt"
+	// "log"
+	// "os"
 	"sortAlgorithms/sort"
 	"sortAlgorithms/util"
 )
@@ -34,15 +34,15 @@ func main() {
 	// 	defer file.Close()                                                                     //
 	// }
 
-	// // fmt.Println("++++++++++++++++++++++++++++++++", util.ReadIntegers(file, 1000))
+	//fmt.Println("++++++++++++++++++++++++++++++++", util.ReadIntegers(file, 1000))
 
-	// file1, err1 := os.Open("temp/out1.bin") // abre arquivo
+	// file1, err1 := os.Open("temp/out9_6_4_2_1_8_7_5_3_0.bin") // abre arquivo
 	// if err1 != nil {                        // se der erro cancela tudo
 	// 	log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err1) //
 	// 	defer file1.Close()                                                                     //
 	// }
 
-	// // fmt.Println("\n\n\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", util.ReadIntegers(file1, 1000))
+	// fmt.Println("\n\n\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", util.ReadIntegers(file1, 1000))
 
 	// sort.Merge_arrays(util.ReadIntegers, util.CompareInt, file1, file, 1000)
 
