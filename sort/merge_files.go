@@ -2,22 +2,22 @@ package sort
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"log"
 	"math"
 	"os"
 	"sortAlgorithms/util"
 	"strconv"
-	"sync"
+
+	//"sync"
 
 	"golang.org/x/sync/semaphore"
 )
 
-var queueLock = &sync.Mutex{}
+//var queueLock = &sync.Mutex{}
 var sem *(semaphore.Weighted)
 
-func Merge_arrays(readData func(file *os.File, num int) []util.T, cmp func(util.T, util.T) bool, file1, file2 *os.File, qtdMaxElem int) {
+func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(util.T, util.T) bool, file1, file2 *os.File, qtdMaxElem int64) {
 
 	//Cria o arquivo com o output
 	fileO, err := os.Create("output.bin")
@@ -27,7 +27,7 @@ func Merge_arrays(readData func(file *os.File, num int) []util.T, cmp func(util.
 
 	defer fileO.Close()
 
-	var idx int = 0                     //Indice do vetor de output
+	var idx int64 = 0                   //Indice do vetor de output
 	var flag1, flag2 bool = true, true  //Flags para indicar se ainda ha elementos nos arquivos
 	var outArr, inArr1, inArr2 []util.T //Vetores que conterao os elementos lidos dos arquivos
 
@@ -64,10 +64,7 @@ func Merge_arrays(readData func(file *os.File, num int) []util.T, cmp func(util.
 
 			if idx == qtdMaxElem/2 { //Se o vetor de output estiver cheio
 				//Escreve os dados no arquivo output
-				err = binary.Write(fileO, binary.LittleEndian, outArr)
-				if err != nil {
-					fmt.Println("Nao foi possivel escrever no arquivo output", err)
-				}
+				util.WriteIntegers(fileO, outArr)
 				outArr = nil //Zera o vetor
 				idx = 0      //O vetor output tem 0 elementos
 			}
@@ -76,10 +73,7 @@ func Merge_arrays(readData func(file *os.File, num int) []util.T, cmp func(util.
 
 	if len(outArr) != 0 { //Se o vetor de output não for vazio, escreve no arquivo de output
 		//Escreve os dados no arquivo output
-		err = binary.Write(fileO, binary.LittleEndian, outArr)
-		if err != nil {
-			fmt.Println("Nao foi possivel escrever no arquivo output", err)
-		}
+		util.WriteIntegers(fileO, outArr)
 	}
 
 	for flag1 { //Se ainda houver elementos no arquivo 1
@@ -93,10 +87,7 @@ func Merge_arrays(readData func(file *os.File, num int) []util.T, cmp func(util.
 		}
 
 		//Escreve os dados no arquivo output
-		err = binary.Write(fileO, binary.LittleEndian, inArr1)
-		if err != nil {
-			fmt.Println("Nao foi possivel escrever no arquivo output", err)
-		}
+		util.WriteIntegers(fileO, inArr1)
 		inArr1 = nil //Zera o vetor do arquivo 1
 	}
 
@@ -111,10 +102,7 @@ func Merge_arrays(readData func(file *os.File, num int) []util.T, cmp func(util.
 		}
 
 		//Escreve os dados no arquivo output
-		err = binary.Write(fileO, binary.LittleEndian, inArr2)
-		if err != nil {
-			fmt.Println("Nao foi possivel escrever no arquivo output", err)
-		}
+		util.WriteIntegers(fileO, inArr2)
 		inArr2 = nil //Zera o vetor do arquivo 2
 	}
 }
@@ -181,8 +169,8 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 }
 
 func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg string, size int, memMax int, cmp func(util.T, util.T) bool) {
-	file, err := os.Open("integerscpp.bin") // abre arquivo
-	if err != nil {                         // se der erro cancela tudo
+	file, err := os.Open("integerscpp2.bin") // abre arquivo
+	if err != nil {                          // se der erro cancela tudo
 		log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err) //
 		defer file.Close()                                                                     //
 	}
@@ -200,7 +188,7 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 
 	for i := 0; i < fds_qtd; i++ {
 		sem.Acquire(ctx, 1) // pega uma permissao do sem
-		Read_And_Sort(i, size, file_limit, "integerscpp.bin", sortAlg, readData, cmp)
+		Read_And_Sort(i, size, file_limit, "integerscpp2.bin", sortAlg, readData, cmp)
 	}
 
 }
