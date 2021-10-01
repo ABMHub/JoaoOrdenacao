@@ -2,7 +2,6 @@ package sort
 
 import(
 	"sortAlgorithms/util"
-	"sync"
 )
 
 func Mergesort_P(arr []util.T, cmp func(util.T, util.T) bool){
@@ -21,7 +20,7 @@ func Mergesort_P(arr []util.T, cmp func(util.T, util.T) bool){
 
 	bF[0] = util.Pair{0,part+npart-1}
 
-	for j := 1; bF[j-1].Snd.(int) <= fin; j++{
+	for j := 1;; j++{
 		bolH[j-1]=false
 
 		go func(idx int){
@@ -30,7 +29,9 @@ func Mergesort_P(arr []util.T, cmp func(util.T, util.T) bool){
 			}()
 			Mergesort(arr, bF[idx].Fst.(int), bF[idx].Snd.(int), cmp)
 		}(j-1)
-
+		if(bF[j-1].Snd.(int) == fin){
+			break
+		}
 		bF[j] = util.Pair{bF[j-1].Snd.(int) + 1, bF[j-1].Snd.(int) + part}
 	}
 
