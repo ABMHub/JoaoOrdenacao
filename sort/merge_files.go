@@ -21,7 +21,7 @@ var cond_files = &sync.Cond{} //variavel condicao para os arquivos
 
 var queueLock = &sync.Mutex{}
 
-const sem_permissions_RAS int = 2 //numero de permissoes que o semaforo Read_And_Sort
+const sem_permissions_RAS int = 12 //numero de permissoes que o semaforo Read_And_Sort
 var sem_RAS *(semaphore.Weighted) //controla as threads Read_And_Sort
 
 //var sem_files *(semaphore.Weighted)		//semaforo que controla os arquivos que ja podem ser mesclados
@@ -213,7 +213,7 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 	sem_RAS.Release(1)
 }
 
-func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg string, size int, memMax int, cmp func(util.T, util.T) bool) {
+func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg string, size int, cmp func(util.T, util.T) bool) {
 	//Inicializa a variavel condicao
 	cond_files = sync.NewCond(queueLock)
 
@@ -229,10 +229,11 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 
 	stat, _ := file.Stat()
 	//stat.Size() // tamanho do arquivo
-	unidade := 3
+	unidade := 6 //6 pois queremos MB
 	//dataNumber := int(math.Floor(math.Pow(2, float64(unidade)) / float64(size))) * 10 // qtd de file descriptors
 	fds_qtd := int(math.Floor(float64(stat.Size())/math.Pow(10, float64(unidade)))) / size
 	file_limit := stat.Size() / int64(fds_qtd)
+	n_max_elements := int(file_limit) / size		//assim, na ram vai ter no maximo o espaco equivalente a um arquivo temporario
 	//fileLimit := int64(size * dataNumber)                          // numero em bytes do offset do seek
 	fmt.Println(file_limit)
 
@@ -290,7 +291,7 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 		output_name = "out" + strconv.Itoa(i)
 		i++
 		wg.Add(1)
-		go Merge_arrays(util.ReadIntegers, util.CompareInt, file1_name, file2_name, 1000, output_name)
+		go Merge_arrays(util.ReadIntegers, util.CompareInt, file1_name, file2_name, int64(n_max_elements), output_name)
 	}
 
 	wg.Wait() //Espera todo mundo terminar
