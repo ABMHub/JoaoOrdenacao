@@ -4,15 +4,15 @@ import(
 	"sortAlgorithms/util"
 )
 
-func Mergesort_P(arr []util.T, cmp func(util.T, util.T) bool){
+func Mergesort_P(arr []util.T, begin, fin int, cmp func(util.T, util.T) bool){
 	
 	p_threads := util.GetThreadLimit() + 1
-	var fin, part, npart, arrSize int // ultimo idx do arr, particoes, arruma as particoes, ...
+	var part, npart int // ultimo idx do arr, particoes, arruma as particoes, ...
 	bF := make([]util.Pair, p_threads + 1) // guarda begin e end de cada particao.
 	bolH := make([]bool, p_threads + 1) // fala se a particao esta ou nao preparada para modificacao
-	arrSize = len(arr)
-	fin = arrSize - 1
-	part, npart = arrSize/p_threads, arrSize%p_threads // pega as particoes
+	
+	part, npart = (fin-begin+1)/p_threads, (fin-begin+1)%p_threads // pega as particoes
+	
 	bF[0] = util.Pair{0,part+npart-1} // inicializa a primeira particao
 
 	for j := 1;; j++{
@@ -31,7 +31,7 @@ func Mergesort_P(arr []util.T, cmp func(util.T, util.T) bool){
 		// calculo para proxima particao.
 	}
 
-	for bF[0].Snd.(int) - bF[0].Fst.(int) + 1 < arrSize{ 
+	for bF[0].Snd.(int) - bF[0].Fst.(int) + 1 < fin-begin+1{ 
 		for i := 0; i < p_threads; i++{ // checa todas as particoes.
 			if bolH[i]{ // particao ta pronta
 				for j := i + 1; j < p_threads; j++{ // checa pela proxima particao pronta
