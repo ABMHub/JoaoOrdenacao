@@ -21,7 +21,7 @@ var cond_files = &sync.Cond{} //variavel condicao para os arquivos
 
 var queueLock = &sync.Mutex{}
 
-const sem_permissions_RAS int = 12 //numero de permissoes que o semaforo Read_And_Sort
+const sem_permissions_RAS int = 6 //numero de permissoes que o semaforo Read_And_Sort
 var sem_RAS *(semaphore.Weighted) //controla as threads Read_And_Sort
 
 //var sem_files *(semaphore.Weighted)		//semaforo que controla os arquivos que ja podem ser mesclados
@@ -173,9 +173,9 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 	case "quick-sort":
 		Quicksort_F(arr, 0, len(arr)-1, cmp)
 	case "merge-sort":
-		Mergesort_F(arr, 0, len(arr)-1, cmp)
+		Mergesort_P(arr, cmp)
 	default:
-		Mergesort_F(arr, 0, len(arr)-1, cmp)
+		Mergesort_P(arr, cmp)
 	}
 
 	//Cria uma pasta temporaria
@@ -214,6 +214,9 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 }
 
 func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg string, size int, cmp func(util.T, util.T) bool) {
+	//arquivo a ser ordenado
+	file_nm := "IntegersGo.bin"
+
 	//Inicializa a variavel condicao
 	cond_files = sync.NewCond(queueLock)
 
@@ -221,8 +224,8 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 	files_queue = util.NewList()
 	count_files = 0
 
-	file, err := os.Open("integerscpp2.bin") // abre arquivo
-	if err != nil {                          // se der erro cancela tudo
+	file, err := os.Open(file_nm) // abre arquivo
+	if err != nil {               // se der erro cancela tudo
 		log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err) //
 		defer file.Close()                                                                     //
 	}
@@ -233,9 +236,10 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 	//dataNumber := int(math.Floor(math.Pow(2, float64(unidade)) / float64(size))) * 10 // qtd de file descriptors
 	fds_qtd := int(math.Floor(float64(stat.Size())/math.Pow(10, float64(unidade)))) / size
 	file_limit := stat.Size() / int64(fds_qtd)
-	n_max_elements := int(file_limit) / size		//assim, na ram vai ter no maximo o espaco equivalente a um arquivo temporario
+	n_max_elements := int(file_limit) / size //assim, na ram vai ter no maximo o espaco equivalente a um arquivo temporario
 	//fileLimit := int64(size * dataNumber)                          // numero em bytes do offset do seek
-	fmt.Println(file_limit)
+	fmt.Println("n_max:", n_max_elements)
+	fmt.Println("fileLImit:", file_limit)
 
 	//Contexto da thread principal
 	ctx := context.Background()
@@ -250,8 +254,8 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 	//fragmenta e ordena os arquivos
 	for i = 0; i < fds_qtd; i++ {
 		sem_RAS.Acquire(ctx, 1) // pega uma permissao do sem
-		go Read_And_Sort(i, size, file_limit, "integerscpp2.bin", sortAlg, readData, cmp)
-		fmt.Println("Hey you")
+		go Read_And_Sort(i, size, file_limit, file_nm, sortAlg, readData, cmp)
+		//fmt.Println("Hey you")
 	}
 
 	var output_name string

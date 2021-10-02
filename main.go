@@ -6,17 +6,15 @@ import (
 	// "os"
 
 	"fmt"
-	"log"
-	"os"
 
-	sortAlgorithms/sort"
+	"sortAlgorithms/sort"
 	"sortAlgorithms/util"
 )
 
 func main() {
 	size := 4
-	sort.Merge_Files(util.ReadIntegers, "merge-sort", size, 1000, util.CompareInt)
-
+	sort.Merge_Files(util.ReadIntegers, "merge-sort", size, util.CompareInt)
+	util.SetThreadLimit(4)
 	//util.GenerateFiles(250000000)
 
 	// file1, err1 := os.Open("IntegersGo.bin") // abre arquivo
@@ -25,6 +23,6 @@ func main() {
 	// 	defer file1.Close()                                                                     //
 	// }
 
-	fmt.Println(util.ReadIntegers(file1, 10))
-
+	//fmt.Println(util.ReadIntegers(file1, 10))
+	fmt.Println("oi")
 }

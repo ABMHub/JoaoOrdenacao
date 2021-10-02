@@ -29,7 +29,10 @@ func Quicksort_F(arr []util.T, low, high int, cmp func(util.T, util.T) bool) {
 
 	gr := func() {
 		Quicksort_F(arr, low, pivot_index-1, cmp)
+	}
+	gr2 := func() {
 		Quicksort_F(arr, pivot_index+1, high, cmp)
 	}
-	util.Semaforo(gr)
+	
+	util.Semaforo(1,gr,gr2)
 }
