@@ -4,7 +4,7 @@ import(
 	"sortAlgorithms/util"
 )
 
-func Mergesort_P(arr []util.T, begin, fin int, cmp func(util.T, util.T) bool){
+func Mergesort_P(arr []util.T,	 cmp func(util.T, util.T) bool){
 	
 	p_threads := util.GetThreadLimit() + 1
 	var part, npart int // ultimo idx do arr, particoes, arruma as particoes, ...

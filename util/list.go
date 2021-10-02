@@ -56,6 +56,34 @@ func (v *List) Pop_back() T{
     return schauss
 }
 
+func (v *List) Push_front(path T){
+    ptr := NewNode(path) 
+    if v.head == nil{
+        v.head = ptr
+        v.tail = ptr
+    }else{
+        ptr.nxt = v.head
+        v.head.prv = ptr
+        v.head = ptr
+    }
+    v.Size++
+}
+
+func (v *List) Pop_front() T{
+    if v.head == nil{
+        return ""
+    }
+    var schauss T = v.head.data
+    v.head = v.head.nxt
+    if(v.head == nil){
+        v.tail = nil
+    }else{
+        v.head.prv = nil
+    }
+    v.Size--
+    return schauss
+}
+
 func (v *List) Front() T{
     if(v.head==nil){
         return nil
