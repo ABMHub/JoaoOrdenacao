@@ -1,10 +1,13 @@
 package util
 
 import (
+	"bytes"
 	"encoding/binary"
+	"file"
 	"fmt"
 	"io"
 	"math/rand"
+
 	//"log"
 	"os"
 )
@@ -23,16 +26,28 @@ func ReadBytes(file *os.File, qtdBytes int) ([]byte, error) {
 	return bytes, err
 }
 
+
+
 func WriteIntegers(file *os.File, arr []T) {
 	//buf := new(bytes.Buffer)
 
-	for i := 0; i < len(arr); i++ {
-		err := binary.Write(file, binary.LittleEndian, arr[i].(uint32))
-		if err != nil {
-			fmt.Println("binary.Write failed:", err)
-		}
-	} 
+	// for i := 0; i < len(arr); i++ {
+	// 	err := binary.Write(file, binary.LittleEndian, arr[i].(uint32))
+	// 	if err != nil {
+	// 		fmt.Println("binary.Write failed:", err)
+	// 	}
+	// } 
 
+	w64 := arr
+    //fmt.Println(w64)
+
+    // Write []int64 to database []byte
+    wbuf := new(bytes.Buffer)
+    err := binary.Write(wbuf, binary.LittleEndian, w64)
+    if err != nil {
+        fmt.Println("binary.Write failed:", err)
+    }
+	err = binary.Write(file, binary.LittleEndian, wbuf)
 }
 
 //Recebe o arquivo que sera lido e a quantidade de elementos a serem lidos
@@ -62,7 +77,7 @@ func GenerateFiles (n int64) {
 	if err != nil {
 		fmt.Println("erro")
 	}
-
+	
 	var i int64
 	for i = 0; i < n; i++ {
 		err := binary.Write(ptr, binary.LittleEndian, uint32(rand.Int()))

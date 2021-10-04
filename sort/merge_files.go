@@ -21,7 +21,7 @@ var cond_files = &sync.Cond{} //variavel condicao para os arquivos
 
 var queueLock = &sync.Mutex{}
 
-const sem_permissions_RAS int = 6 //numero de permissoes que o semaforo Read_And_Sort
+const sem_permissions_RAS int = 12 //numero de permissoes que o semaforo Read_And_Sort
 var sem_RAS *(semaphore.Weighted) //controla as threads Read_And_Sort
 
 //var sem_files *(semaphore.Weighted)		//semaforo que controla os arquivos que ja podem ser mesclados
@@ -232,7 +232,7 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 
 	stat, _ := file.Stat()
 	//stat.Size() // tamanho do arquivo
-	unidade := 6 //6 pois queremos MB
+	unidade := 7 //6 pois queremos MB
 	//dataNumber := int(math.Floor(math.Pow(2, float64(unidade)) / float64(size))) * 10 // qtd de file descriptors
 	fds_qtd := int(math.Floor(float64(stat.Size())/math.Pow(10, float64(unidade)))) / size
 	file_limit := stat.Size() / int64(fds_qtd)
@@ -275,16 +275,16 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 		for count_files < 2 {
 			cond_files.Wait()
 		}
-		file1_name := (files_queue.Pop_back()).(string)
-		file2_name := (files_queue.Pop_back()).(string)
+		file1_name := (files_queue.Pop_front()).(string)
+		file2_name := (files_queue.Pop_front()).(string)
 		count_files -= 2
 
 		cond_files.L.Unlock()
 		//queueLock.Unlock()
 		//obtem o nome dos dois arquivos que serao mesclados
 		// queueLock.Lock()
-		// file1_name := (files_queue.Pop_back()).(string)
-		// file2_name := (files_queue.Pop_back()).(string)
+		// file1_name := (files_queue.Pop_front()).(string)
+		// file2_name := (files_queue.Pop_front()).(string)
 		// count_files -= 2
 		// queueLock.Unlock()
 

@@ -14,7 +14,7 @@ import (
 func main() {
 	size := 4
 	sort.Merge_Files(util.ReadIntegers, "merge-sort", size, util.CompareInt)
-	util.SetThreadLimit(4)
+	util.SetThreadLimit(1)
 	//util.GenerateFiles(250000000)
 
 	// file1, err1 := os.Open("IntegersGo.bin") // abre arquivo
