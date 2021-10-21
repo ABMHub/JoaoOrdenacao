@@ -12,17 +12,19 @@ import (
 
 	//"sync"
 
+	"github.com/cheggaaa/pb/v3"
 	"golang.org/x/sync/semaphore"
 )
 
 var wg sync.WaitGroup
+var progress_bar *pb.ProgressBar
 
 var cond_files = &sync.Cond{} //variavel condicao para os arquivos
 
 var queueLock = &sync.Mutex{}
 
 const sem_permissions_RAS int = 12 //numero de permissoes que o semaforo Read_And_Sort
-var sem_RAS *(semaphore.Weighted) //controla as threads Read_And_Sort
+var sem_RAS *(semaphore.Weighted)  //controla as threads Read_And_Sort
 
 //var sem_files *(semaphore.Weighted)		//semaforo que controla os arquivos que ja podem ser mesclados
 
@@ -150,6 +152,7 @@ func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(uti
 	os.Remove("temp" + string(os.PathSeparator) + file1_n + ".bin") // deleta arquivo
 	os.Remove("temp" + string(os.PathSeparator) + file2_n + ".bin") // deleta arquivo
 
+	progress_bar.Increment()
 	sem_RAS.Release(1)
 	wg.Done() //Sinaliza que a thread acabou
 }
@@ -209,6 +212,7 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 		fmt.Println("Nao foi possivel escrever no arquivo temporario"+strconv.Itoa(page), err)
 	}
 
+	progress_bar.Increment()
 	fout.Close()
 	sem_RAS.Release(1)
 }
@@ -232,7 +236,7 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 
 	stat, _ := file.Stat()
 	//stat.Size() // tamanho do arquivo
-	unidade := 7 //6 pois queremos MB
+	unidade := 6 //6 pois queremos MB
 	//dataNumber := int(math.Floor(math.Pow(2, float64(unidade)) / float64(size))) * 10 // qtd de file descriptors
 	fds_qtd := int(math.Floor(float64(stat.Size())/math.Pow(10, float64(unidade)))) / size
 	file_limit := stat.Size() / int64(fds_qtd)
@@ -249,6 +253,11 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 
 	//semaforo que controla as threads do merge arrays
 	//sem_files = semaphore.NewWeighted(int64(sem_permissions_files))
+
+	fmt.Println("comecando progressbar")
+	progress_bar = pb.StartNew((fds_qtd * 2) - 1)
+	progress_bar.Start()
+	fmt.Println("comecando progressbar")
 
 	var i int
 	//fragmenta e ordena os arquivos
@@ -303,4 +312,6 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 	//Renomeia o arquivo, move ele pra raiz e deleta a temp
 	os.Rename("temp"+string(os.PathSeparator)+output_name+".bin", "."+string(os.PathSeparator)+"Sorted"+".bin")
 	os.Remove("temp")
+
+	progress_bar.Finish()
 }

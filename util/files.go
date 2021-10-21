@@ -12,6 +12,8 @@ import (
 
 	//"log"
 	"os"
+
+	"github.com/cheggaaa/pb/v3"
 )
 
 //Recebe o arquivo a ser lido e o tamanho em bytes do elemento que deve ser lido
@@ -89,7 +91,9 @@ func ReadIntegers(file *os.File, num int64) []T {
 }
 
 func GenerateFiles(n int64) {
+	progress_bar := pb.Start64(n)
 	ptr, err := os.Create("IntegersGo.bin")
+
 	if err != nil {
 		fmt.Println("erro")
 	}
@@ -97,8 +101,10 @@ func GenerateFiles(n int64) {
 	var i int64
 	for i = 0; i < n; i++ {
 		err := binary.Write(ptr, binary.LittleEndian, uint32(rand.Int()))
+		progress_bar.Increment()
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
 	}
+	progress_bar.Finish()
 }
