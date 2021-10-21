@@ -1,12 +1,14 @@
 package util
 
 import (
-	"bytes"
+	//"bytes"
 	"encoding/binary"
-	"file"
+	//"file"
 	"fmt"
 	"io"
 	"math/rand"
+
+	//"unsafe"
 
 	//"log"
 	"os"
@@ -26,28 +28,42 @@ func ReadBytes(file *os.File, qtdBytes int) ([]byte, error) {
 	return bytes, err
 }
 
+type Pair3 struct {
+	Fst, Snd int32
+}
 
+type lel struct {
+	ff int
+}
+
+// func WriteIntegers(file *os.File, arr []T) {
+// 	//buf := new(bytes.Buffer)
+
+// 	for i := 0; i < len(arr); i++ {
+// 		err := binary.Write(file, binary.LittleEndian, arr[i].(uint32))
+// 		if err != nil {
+// 			fmt.Println("binary.Write failed:", err)
+// 		}
+// 	}
+
+// }
 
 func WriteIntegers(file *os.File, arr []T) {
-	//buf := new(bytes.Buffer)
+	t2 := make([]byte, len(arr)*4)
 
-	// for i := 0; i < len(arr); i++ {
-	// 	err := binary.Write(file, binary.LittleEndian, arr[i].(uint32))
-	// 	if err != nil {
-	// 		fmt.Println("binary.Write failed:", err)
-	// 	}
-	// } 
+	//t := *(*[] Pair3)(unsafe.Pointer(&arr))
+	j := 0
+	for i := 0; i < len(t2); i += 4 {
+		binary.LittleEndian.PutUint32(t2[i:i+4], arr[j].(uint32))
+		j += 1
+	}
 
-	w64 := arr
-    //fmt.Println(w64)
-
-    // Write []int64 to database []byte
-    wbuf := new(bytes.Buffer)
-    err := binary.Write(wbuf, binary.LittleEndian, w64)
-    if err != nil {
-        fmt.Println("binary.Write failed:", err)
-    }
-	err = binary.Write(file, binary.LittleEndian, wbuf)
+	//for i := 0; i < len(arr); i++ {
+	err := binary.Write(file, binary.LittleEndian, t2)
+	if err != nil {
+		fmt.Println("binary.Write failed:", err)
+	}
+	//}
 }
 
 //Recebe o arquivo que sera lido e a quantidade de elementos a serem lidos
@@ -72,17 +88,17 @@ func ReadIntegers(file *os.File, num int64) []T {
 	return arr
 }
 
-func GenerateFiles (n int64) {
+func GenerateFiles(n int64) {
 	ptr, err := os.Create("IntegersGo.bin")
 	if err != nil {
 		fmt.Println("erro")
 	}
-	
+
 	var i int64
 	for i = 0; i < n; i++ {
 		err := binary.Write(ptr, binary.LittleEndian, uint32(rand.Int()))
 		if err != nil {
 			fmt.Println("binary.Write failed:", err)
 		}
-	} 
+	}
 }
