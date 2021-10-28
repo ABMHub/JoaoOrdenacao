@@ -86,7 +86,7 @@ func ReadIntegers(file *os.File, num int64) []T {
 	return arr
 }
 
-func GenerateFiles(n int64) {
+func GenerateFiles(n int64, random_seed int64) {
 	progress_bar := pb.New64(n)
 	progress_bar.Prefix("Generate Files")
 	progress_bar.ShowSpeed = false
@@ -100,6 +100,8 @@ func GenerateFiles(n int64) {
 	}
 
 	m := n / 10000
+
+	rand.Seed(random_seed)
 
 	var i int64
 	var j int64

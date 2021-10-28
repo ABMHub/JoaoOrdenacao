@@ -16,13 +16,14 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-var pool *pb.Pool
+var pPool *util.PBar
 var wg sync.WaitGroup
-var progress_bar *pb.ProgressBar
+var general_pbar *pb.ProgressBar
 
 var cond_files = &sync.Cond{} //variavel condicao para os arquivos
 
 var queueLock = &sync.Mutex{}
+var poolLock = &sync.Mutex{}
 
 const sem_permissions_RAS int = 12 //numero de permissoes que o semaforo Read_And_Sort
 var sem_RAS *(semaphore.Weighted)  //controla as threads Read_And_Sort
@@ -49,10 +50,11 @@ func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(uti
 
 	merge_progress_bar := pb.New64((stat1.Size() + stat2.Size()) / int64(size))
 	merge_progress_bar.Prefix(stat1.Name() + " + " + stat2.Name())
-	progress_bar.ShowSpeed = false
-	progress_bar.ShowElapsedTime = true
-	pool.Add(merge_progress_bar)
-	merge_progress_bar.Start()
+	merge_progress_bar.ShowSpeed = false
+	// merge_progress_bar.ShowElapsedTime = true
+	poolLock.Lock()
+	pPool.Add(merge_progress_bar)
+	poolLock.Unlock()
 
 	//Cria o arquivo com o output
 	folder := "temp" + string(os.PathSeparator)
@@ -167,9 +169,12 @@ func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(uti
 	os.Remove("temp" + string(os.PathSeparator) + file1_n + ".bin") // deleta arquivo
 	os.Remove("temp" + string(os.PathSeparator) + file2_n + ".bin") // deleta arquivo
 
-	progress_bar.Increment()
-	sem_RAS.Release(1)
+	general_pbar.Increment()
 	merge_progress_bar.Finish()
+	poolLock.Lock()
+	pPool.UpdateFinished()
+	poolLock.Unlock()
+	sem_RAS.Release(1)
 	wg.Done() //Sinaliza que a thread acabou
 }
 
@@ -228,7 +233,7 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 		fmt.Println("Nao foi possivel escrever no arquivo temporario"+strconv.Itoa(page), err)
 	}
 
-	progress_bar.Increment()
+	general_pbar.Increment()
 	fout.Close()
 	sem_RAS.Release(1)
 }
@@ -271,12 +276,11 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 	//sem_files = semaphore.NewWeighted(int64(sem_permissions_files))
 
 	// fmt.Println("comecando progressbar")
-	progress_bar = pb.New((fds_qtd * 2) - 1)
-	progress_bar.Prefix("Total")
-	progress_bar.ShowSpeed = false
-	progress_bar.ShowElapsedTime = true
-	pool = pb.NewPool(progress_bar)
-	pool.Start()
+	general_pbar = pb.New((fds_qtd * 2) - 1)
+	general_pbar.Prefix("Total")
+	general_pbar.ShowSpeed = false
+	// general_pbar.ShowElapsedTime = true
+	pPool = util.NewPBar(general_pbar)
 	// fmt.Println("comecando progressbar")
 
 	var i int
@@ -333,5 +337,5 @@ func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg strin
 	os.Rename("temp"+string(os.PathSeparator)+output_name+".bin", "."+string(os.PathSeparator)+"Sorted"+".bin")
 	os.Remove("temp")
 
-	progress_bar.Finish()
+	pPool.End()
 }
