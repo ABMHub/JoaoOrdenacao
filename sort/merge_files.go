@@ -11,14 +11,18 @@ import (
 
 	//"sync"
 
+	"github.com/cheggaaa/pb"
 	"golang.org/x/sync/semaphore"
 )
 
+var pPool *util.PBar
 var wg sync.WaitGroup
+var general_pbar *pb.ProgressBar
 
 var cond_files = &sync.Cond{} //variavel condicao para os arquivos
 
 var queueLock = &sync.Mutex{}
+var poolLock = &sync.Mutex{}
 
 const sem_permissions_RAS int = 12 //numero de permissoes que o semaforo Read_And_Sort
 var sem_RAS *(semaphore.Weighted)  //controla as threads Read_And_Sort
@@ -29,7 +33,7 @@ var count_files int //quantidade de arquivos temporarios
 //Fila com os arquivos prontos
 var files_queue util.List
 
-func merge_arrays(file1_n, file2_n, output_name string, max_size int64, readData util.ReadData,
+func merge_arrays(file1_n, file2_n, output_name string, elem_size int, max_size int64, readData util.ReadData,
 	writeData util.WriteData, cmp util.Compare) {
 	file1, err1 := os.Open("temp" + string(os.PathSeparator) + file1_n + ".bin") // abre arquivo
 	if err1 != nil {
@@ -40,6 +44,17 @@ func merge_arrays(file1_n, file2_n, output_name string, max_size int64, readData
 	if err2 != nil {
 		log.Fatal(err2)
 	}
+
+	stat1, _ := file1.Stat()
+	stat2, _ := file2.Stat()
+
+	merge_progress_bar := pb.New64((stat1.Size() + stat2.Size()) / int64(elem_size))
+	merge_progress_bar.Prefix(stat1.Name() + " + " + stat2.Name())
+	merge_progress_bar.ShowSpeed = false
+	// merge_progress_bar.ShowElapsedTime = true
+	poolLock.Lock()
+	pPool.Add(merge_progress_bar)
+	poolLock.Unlock()
 
 	//Cria o arquivo com o output
 	folder := "temp" + string(os.PathSeparator)
@@ -62,6 +77,7 @@ func merge_arrays(file1_n, file2_n, output_name string, max_size int64, readData
 			//Se ainda assim o vetor do arquivo 1 for vazio, sai do loop (acabou os elementos)
 			if len(inArr1) == 0 {
 				flag1 = false //Indica que nao tem mais elementos para ler do arquivo 1
+				inArr1 = nil
 				break
 			}
 		}
@@ -71,6 +87,7 @@ func merge_arrays(file1_n, file2_n, output_name string, max_size int64, readData
 			//Se ainda assim o vetor do arquivo 2 for vazio, sai do loop (acabou os elementos)
 			if len(inArr2) == 0 {
 				flag2 = false //Indica que nao tem mais elementos para ler do arquivo 2
+				inArr2 = nil
 				break
 			}
 		}
@@ -85,6 +102,7 @@ func merge_arrays(file1_n, file2_n, output_name string, max_size int64, readData
 			}
 
 			idx++ //Aumentou em 1 a quantidade de elementos no vetor de output
+			merge_progress_bar.Increment()
 
 			if idx == max_size/2 { //Se o vetor de output estiver cheio
 				//Escreve os dados no arquivo output
@@ -146,10 +164,15 @@ func merge_arrays(file1_n, file2_n, output_name string, max_size int64, readData
 	file2.Close()
 
 	//Deleta os arquivos que foram mesclados
-	fmt.Println("f1: ", file1_n, "f2:", file2_n)
+	// fmt.Println("f1: ", file1_n, "f2:", file2_n)
 	os.Remove("temp" + string(os.PathSeparator) + file1_n + ".bin") // deleta arquivo
 	os.Remove("temp" + string(os.PathSeparator) + file2_n + ".bin") // deleta arquivo
 
+	general_pbar.Increment()
+	merge_progress_bar.Finish()
+	poolLock.Lock()
+	pPool.UpdateFinished()
+	poolLock.Unlock()
 	sem_RAS.Release(1)
 	wg.Done() //Sinaliza que a thread acabou
 }
@@ -203,6 +226,7 @@ func read_And_Sort(sort_alg string, page int, num_elem int64, fds *os.File, read
 		fmt.Println("Nao foi possivel escrever no arquivo temporario"+strconv.Itoa(page), err)
 	}
 
+	general_pbar.Increment()
 	fout.Close()
 	sem_RAS.Release(1)
 }
@@ -239,6 +263,14 @@ func Merge_Files(file_name, sortAlg string, elemen_size, max_size int, readData 
 	fds, size_fd := fragment(file_name, elemen_size, int64(max_size))
 	fds_qtd := len(fds)
 
+	// fmt.Println("comecando progressbar")
+	general_pbar = pb.New((fds_qtd * 2) - 1)
+	general_pbar.Prefix("Total")
+	general_pbar.ShowSpeed = false
+	// general_pbar.ShowElapsedTime = true
+	pPool = util.NewPBar(general_pbar)
+	// fmt.Println("comecando progressbar")
+
 	//fragmenta e ordena os arquivos
 	var i int
 	for i = 0; i < fds_qtd; i++ {
@@ -268,7 +300,7 @@ func Merge_Files(file_name, sortAlg string, elemen_size, max_size int, readData 
 		output_name = "out" + strconv.Itoa(i)
 		i++
 		wg.Add(1)
-		go merge_arrays(file1_name, file2_name, output_name, int64(max_size), readData, writeData, cmp)
+		go merge_arrays(file1_name, file2_name, output_name, elemen_size, int64(max_size), readData, writeData, cmp)
 	}
 
 	wg.Wait() //Espera todo mundo terminar
@@ -276,4 +308,6 @@ func Merge_Files(file_name, sortAlg string, elemen_size, max_size int, readData 
 	//Renomeia o arquivo, move ele pra raiz e deleta a temp
 	os.Rename("temp"+string(os.PathSeparator)+output_name+".bin", "."+string(os.PathSeparator)+"Sorted"+".bin")
 	os.Remove("temp")
+
+	pPool.End()
 }
