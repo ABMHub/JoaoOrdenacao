@@ -33,10 +33,7 @@ func NewPBar(pbar *pb.ProgressBar) *PBar {
 func (pPool *PBar) Add(pBar *pb.ProgressBar) {
 	var new_array []*pb.ProgressBar
 	new_array = append(new_array, pBar)
-	for _, n_value := range pPool.progress_bar_list {
-		new_array = append(new_array, n_value)
-	}
-	pPool.progress_bar_list = new_array
+	pPool.progress_bar_list = append(new_array, pPool.progress_bar_list...)
 	pPool.reset()
 }
 
@@ -44,7 +41,7 @@ func (pPool *PBar) UpdateFinished() {
 	var new_progress_bar []*pb.ProgressBar
 
 	for _, n_value := range pPool.progress_bar_list {
-		if n_value.IsFinished() == false {
+		if !n_value.IsFinished() {
 			new_progress_bar = append(new_progress_bar, n_value)
 		}
 	}
