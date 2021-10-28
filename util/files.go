@@ -17,6 +17,7 @@ import (
 type ReadData func(file *os.File, num int64) []T
 type Compare func(T, T) bool
 type WriteData func(file *os.File, array []T)
+type Fragment_files func(file *os.File, max_size int) [] *os.File
 
 //Recebe o arquivo a ser lido e o tamanho em bytes do elemento que deve ser lido
 func ReadBytes(file *os.File, qtdBytes int) ([]byte, error) {

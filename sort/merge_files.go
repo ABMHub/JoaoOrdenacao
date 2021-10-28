@@ -159,18 +159,15 @@ func Merge_arrays(readData util.ReadData, cmp util.Compare,
 	Recebe como parametro um arquivo e um indice (page) a partir de qual parte desse arquivo
 	deve ordenar
 */
-func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg string, readData util.ReadData, cmp util.Compare) {
+func Read_And_Sort(file_name, sort_alg string, fds *os.File, readData util.ReadData, cmp util.Compare) {
 	file, err := os.Open(file_name)
 	if err != nil {
 		log.Fatal("Erro na leitura do arquivo binario que sera ordenado", err)
 		defer file.Close()
 	}
 
-	file.Seek(int64(page)*fileLimit, 0)                 //posiciona o ponteiro onde o arquivo deve ser lido
-	arr := readData(file, fileLimit/(int64(elem_size))) //le os dados a partir da posicao definida
-
 	//ordena os dados lidos
-	switch sortAlg {
+	switch sort_alg {
 	case "quick-sort":
 		Quicksort_F(arr, 0, len(arr)-1, cmp)
 	case "merge-sort":
@@ -214,7 +211,20 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 	sem_RAS.Release(1)
 }
 
-func Merge_Files(file_name, sortAlg string, size int, readData util.ReadData, cmp util.Compare) {
+// max_size eh em MB
+func Merge_Files(file_name, sortAlg string, max_size int, readData util.ReadData, cmp util.Compare, fragment util.Fragment_files) {
+	// unidade de medida para max_size 
+	const size_unity = 1000000
+
+	// define a quantidade maxima de memoria
+	max_size = max_size * size_unity
+	
+	// abre arquivo
+	file, err := os.Open(file_name) 
+	if err != nil {               // se der erro cancela tudo
+		log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err) //
+		defer file.Close()                                                                     //
+	}
 
 	//Inicializa a variavel condicao
 	cond_files = sync.NewCond(queueLock)
@@ -223,43 +233,25 @@ func Merge_Files(file_name, sortAlg string, size int, readData util.ReadData, cm
 	files_queue = util.NewList()
 	count_files = 0
 
-	file, err := os.Open(file_name) // abre arquivo
-	if err != nil {               // se der erro cancela tudo
-		log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err) //
-		defer file.Close()                                                                     //
-	}
-
-	stat, _ := file.Stat()
-	//stat.Size() // tamanho do arquivo
-	unidade := 3 //6 pois queremos MB
-	//dataNumber := int(math.Floor(math.Pow(2, float64(unidade)) / float64(size))) * 10 // qtd de file descriptors
-	fds_qtd := int(math.Floor(float64(stat.Size())/math.Pow(10, float64(unidade)))) / size
-	file_limit := stat.Size() / int64(fds_qtd)
-	n_max_elements := int(file_limit) / size //assim, na ram vai ter no maximo o espaco equivalente a um arquivo temporario
-	//fileLimit := int64(size * dataNumber)                          // numero em bytes do offset do seek
-	fmt.Println("n_max:", n_max_elements)
-	fmt.Println("fileLImit:", file_limit)
-
 	//Contexto da thread principal
 	ctx := context.Background()
 
 	//semaforo que controla as threads da read and sort
 	sem_RAS = semaphore.NewWeighted(int64(sem_permissions_RAS))
 
-	//semaforo que controla as threads do merge arrays
-	//sem_files = semaphore.NewWeighted(int64(sem_permissions_files))
+	// Obtem uma lista com os file descriptors necessario
+	fds := fragment(file, max_size)	
+	fds_qtd := len(fds)
 
-	var i int
 	//fragmenta e ordena os arquivos
+	var i int
 	for i = 0; i < fds_qtd; i++ {
 		sem_RAS.Acquire(ctx, 1) // pega uma permissao do sem
-		go Read_And_Sort(i, size, file_limit, file_name, sortAlg, readData, cmp)
-		//fmt.Println("Hey you")
+		go Read_And_Sort(file_name, sortAlg, fds[i], readData, cmp)
 	}
 
 	var output_name string
 	//controla a mesclagem de arquivos
-
 	for count := 0; count < fds_qtd-1; count += 1 {
 
 		sem_RAS.Acquire(ctx, 1) //Garante que o numero de threads esteja dentro do permitido
@@ -267,8 +259,6 @@ func Merge_Files(file_name, sortAlg string, size int, readData util.ReadData, cm
 		//Chama o procedimento que mescla os arquivos
 
 		//So acontece quando pelo menos dois arquivos estiverem prontos
-		//sem_files.Acquire(ctx, 2)
-		//queueLock.Lock()
 		cond_files.L.Lock()
 
 		for count_files < 2 {
@@ -279,17 +269,6 @@ func Merge_Files(file_name, sortAlg string, size int, readData util.ReadData, cm
 		count_files -= 2
 
 		cond_files.L.Unlock()
-		//queueLock.Unlock()
-		//obtem o nome dos dois arquivos que serao mesclados
-		// queueLock.Lock()
-		// file1_name := (files_queue.Pop_front()).(string)
-		// file2_name := (files_queue.Pop_front()).(string)
-		// count_files -= 2
-		// queueLock.Unlock()
-
-		//obtem os ponteiros dos arquivos 1 e 2
-		// file1, _ := os.Open("temp" + string(os.PathSeparator) + file1_name + ".bin") // abre arquivo
-		// file2, _ := os.Open("temp" + string(os.PathSeparator) + file2_name + ".bin") // abre arquivo
 
 		output_name = "out" + strconv.Itoa(i)
 		i++
