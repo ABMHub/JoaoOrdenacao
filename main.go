@@ -15,7 +15,8 @@ import (
 
 func main() {
 	size := 4
-	sort.Merge_Files("integerscpp2.bin", "merge-sort", size, util.ReadIntegers, util.CompareInt)
+
+	sort.Merge_Files("integerscpp2.bin", "merge-sort", size, 10, util.ReadIntegers, util.CompareInt, util.FragmentBin, util.WriteIntegers)
 	util.SetThreadLimit(1)
 	//util.GenerateFiles(250000000)
 
