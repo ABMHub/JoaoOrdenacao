@@ -1,6 +1,10 @@
 package main
 
 import (
+	// "fmt"
+	// "log"
+	// "os"
+
 	"fmt"
 	"log"
 	"os"
@@ -11,8 +15,8 @@ import (
 
 func main() {
 	size := 4
-	sort.Merge_Files(util.ReadIntegers, "merge-sort", size, util.CompareInt)
-	//util.SetThreadLimit(1)
+	sort.Merge_Files("integerscpp2.bin", "merge-sort", size, util.ReadIntegers, util.CompareInt)
+	util.SetThreadLimit(1)
 	//util.GenerateFiles(250000000)
 
 	file1, err1 := os.Open("Sorted.bin") // abre arquivo
@@ -21,6 +25,6 @@ func main() {
 		defer file1.Close()                                                                     //
 	}
 
-	fmt.Println(util.ReadIntegers(file1, 100))
+	fmt.Println(util.ReadIntegers(file1, 10))
 	fmt.Println("oi")
 }

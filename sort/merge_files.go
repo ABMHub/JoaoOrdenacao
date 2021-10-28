@@ -214,10 +214,7 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 	sem_RAS.Release(1)
 }
 
-//func Merge_Files(file_name string, sortAlg string, size int,)
-func Merge_Files(readData util.ReadData, sortAlg string, size int, cmp util.Compare) {
-	//arquivo a ser ordenado
-	file_nm := "integerscpp2.bin"
+func Merge_Files(file_name, sortAlg string, size int, readData util.ReadData, cmp util.Compare) {
 
 	//Inicializa a variavel condicao
 	cond_files = sync.NewCond(queueLock)
@@ -226,7 +223,7 @@ func Merge_Files(readData util.ReadData, sortAlg string, size int, cmp util.Comp
 	files_queue = util.NewList()
 	count_files = 0
 
-	file, err := os.Open(file_nm) // abre arquivo
+	file, err := os.Open(file_name) // abre arquivo
 	if err != nil {               // se der erro cancela tudo
 		log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err) //
 		defer file.Close()                                                                     //
@@ -256,7 +253,7 @@ func Merge_Files(readData util.ReadData, sortAlg string, size int, cmp util.Comp
 	//fragmenta e ordena os arquivos
 	for i = 0; i < fds_qtd; i++ {
 		sem_RAS.Acquire(ctx, 1) // pega uma permissao do sem
-		go Read_And_Sort(i, size, file_limit, file_nm, sortAlg, readData, cmp)
+		go Read_And_Sort(i, size, file_limit, file_name, sortAlg, readData, cmp)
 		//fmt.Println("Hey you")
 	}
 
