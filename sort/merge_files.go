@@ -30,8 +30,8 @@ var count_files int //quantidade de arquivos temporarios
 //Fila com os arquivos prontos
 var files_queue util.List
 
-func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(util.T, util.T) bool,
-	writeData func(file *os.File, array []util.T), file1_n, file2_n string, qtdMaxElem int64, output_name string) {
+func Merge_arrays(readData util.ReadData, cmp util.Compare,
+	writeData util.WriteData, file1_n, file2_n string, qtdMaxElem int64, output_name string) {
 	file1, err1 := os.Open("temp" + string(os.PathSeparator) + file1_n + ".bin") // abre arquivo
 	if err1 != nil {
 		log.Fatal(err1)
@@ -159,7 +159,7 @@ func Merge_arrays(readData func(file *os.File, num int64) []util.T, cmp func(uti
 	Recebe como parametro um arquivo e um indice (page) a partir de qual parte desse arquivo
 	deve ordenar
 */
-func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg string, readData func(file *os.File, num int64) []util.T, cmp func(util.T, util.T) bool) {
+func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg string, readData util.ReadData, cmp util.Compare) {
 	file, err := os.Open(file_name)
 	if err != nil {
 		log.Fatal("Erro na leitura do arquivo binario que sera ordenado", err)
@@ -214,7 +214,8 @@ func Read_And_Sort(page, elem_size int, fileLimit int64, file_name, sortAlg stri
 	sem_RAS.Release(1)
 }
 
-func Merge_Files(readData func(file *os.File, num int64) []util.T, sortAlg string, size int, cmp func(util.T, util.T) bool) {
+//func Merge_Files(file_name string, sortAlg string, size int,)
+func Merge_Files(readData util.ReadData, sortAlg string, size int, cmp util.Compare) {
 	//arquivo a ser ordenado
 	file_nm := "integerscpp2.bin"
 

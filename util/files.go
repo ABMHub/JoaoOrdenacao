@@ -14,6 +14,10 @@ import (
 	"os"
 )
 
+type ReadData func(file *os.File, num int64) []T
+type Compare func(T, T) bool
+type WriteData func(file *os.File, array []T)
+
 //Recebe o arquivo a ser lido e o tamanho em bytes do elemento que deve ser lido
 func ReadBytes(file *os.File, qtdBytes int) ([]byte, error) {
 	bytes := make([]byte, qtdBytes) //Vetor com os bytes do elemento
