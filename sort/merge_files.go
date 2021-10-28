@@ -30,8 +30,8 @@ var count_files int //quantidade de arquivos temporarios
 //Fila com os arquivos prontos
 var files_queue util.List
 
-func Merge_arrays(readData util.ReadData, cmp util.Compare,
-	writeData util.WriteData, file1_n, file2_n string, qtdMaxElem int64, output_name string) {
+func merge_arrays(file1_n, file2_n, output_name string, max_size int64, readData util.ReadData,
+				writeData util.WriteData, cmp util.Compare) {
 	file1, err1 := os.Open("temp" + string(os.PathSeparator) + file1_n + ".bin") // abre arquivo
 	if err1 != nil {
 		log.Fatal(err1)
@@ -58,7 +58,7 @@ func Merge_arrays(readData util.ReadData, cmp util.Compare,
 
 	for flag1 && flag2 { //Enquanto houver elementos no arquivo 1 e arquivo 2
 		if len(inArr1) == 0 { //Se o vetor do arquivo 1 for vazio, pega os elementos do arquivo
-			inArr1 = readData(file1, qtdMaxElem/4) //Pega qtdMaxElem/4 elementos do arquivo
+			inArr1 = readData(file1, max_size/4) //Pega max_size/4 elementos do arquivo
 
 			//Se ainda assim o vetor do arquivo 1 for vazio, sai do loop (acabou os elementos)
 			if len(inArr1) == 0 {
@@ -67,7 +67,7 @@ func Merge_arrays(readData util.ReadData, cmp util.Compare,
 			}
 		}
 		if len(inArr2) == 0 { //Se o vetor do arquivo 2 for vazio, pega os elementos do arquivo
-			inArr2 = readData(file2, qtdMaxElem/4) //Pega qtdMaxElem/4 elementos do arquivo
+			inArr2 = readData(file2, max_size/4) //Pega max_size/4 elementos do arquivo
 
 			//Se ainda assim o vetor do arquivo 2 for vazio, sai do loop (acabou os elementos)
 			if len(inArr2) == 0 {
@@ -87,7 +87,7 @@ func Merge_arrays(readData util.ReadData, cmp util.Compare,
 
 			idx++ //Aumentou em 1 a quantidade de elementos no vetor de output
 
-			if idx == qtdMaxElem/2 { //Se o vetor de output estiver cheio
+			if idx == max_size/2 { //Se o vetor de output estiver cheio
 				//Escreve os dados no arquivo output
 				writeData(fileO, outArr)
 				outArr = nil //Zera o vetor
@@ -103,7 +103,7 @@ func Merge_arrays(readData util.ReadData, cmp util.Compare,
 
 	for flag1 { //Se ainda houver elementos no arquivo 1
 		if len(inArr1) == 0 { //Se o vetor do arquivo 1 for vazio, pega os elementos do arquivo
-			inArr1 = readData(file1, qtdMaxElem/4) //Pega qtdMaxElem/4 elementos do arquivo
+			inArr1 = readData(file1, max_size/4) //Pega max_size/4 elementos do arquivo
 
 			//Se ainda assim o vetor do arquivo 1 for vazio, sai do loop
 			if len(inArr1) == 0 {
@@ -118,7 +118,7 @@ func Merge_arrays(readData util.ReadData, cmp util.Compare,
 
 	for flag2 { //Se ainda houver elementos no arquivo 2
 		if len(inArr2) == 0 { //Se ainda houver elementos no arquivo 1
-			inArr2 = readData(file2, qtdMaxElem/4) //Pega qtdMaxElem/4 elementos do arquivo
+			inArr2 = readData(file2, max_size/4) //Pega max_size/4 elementos do arquivo
 
 			//Se ainda assim o vetor do arquivo 2 for vazio, sai do loop
 			if len(inArr2) == 0 {
@@ -159,13 +159,10 @@ func Merge_arrays(readData util.ReadData, cmp util.Compare,
 	Recebe como parametro um arquivo e um indice (page) a partir de qual parte desse arquivo
 	deve ordenar
 */
-func Read_And_Sort(file_name, sort_alg string, fds *os.File, readData util.ReadData, cmp util.Compare) {
-	file, err := os.Open(file_name)
-	if err != nil {
-		log.Fatal("Erro na leitura do arquivo binario que sera ordenado", err)
-		defer file.Close()
-	}
-
+func read_And_Sort(sort_alg string, page int, num_elem int64, fds *os.File, readData util.ReadData, writeData util.WriteData, cmp util.Compare) {
+	// le os dados
+	arr := readData(fds, num_elem)
+	
 	//ordena os dados lidos
 	switch sort_alg {
 	case "quick-sort":
@@ -176,7 +173,7 @@ func Read_And_Sort(file_name, sort_alg string, fds *os.File, readData util.ReadD
 		Mergesort_P(arr, cmp)
 	}
 
-	//Cria uma pasta temporaria
+	//Cria uma pasta temporaria se ela nao existir
 	os.Mkdir("temp", 0755)
 
 	//define o nome do arquivo e sua path
@@ -189,7 +186,7 @@ func Read_And_Sort(file_name, sort_alg string, fds *os.File, readData util.ReadD
 		fmt.Println("Nao foi possivel criar o arquivo temporario"+strconv.Itoa(page), err)
 	}
 
-	util.WriteIntegers(fout, arr)
+	writeData(fout, arr)
 
 	//Coloca a path do arquivo ordenado, lock porque eh regiao critica
 	//queueLock.Lock()
@@ -212,7 +209,7 @@ func Read_And_Sort(file_name, sort_alg string, fds *os.File, readData util.ReadD
 }
 
 // max_size eh em MB
-func Merge_Files(file_name, sortAlg string, max_size int, readData util.ReadData, cmp util.Compare, fragment util.Fragment_files) {
+func Merge_Files(file_name, sortAlg string, max_size int, readData util.ReadData, cmp util.Compare, fragment util.Fragment_files, writeData util.WriteData) {
 	// unidade de medida para max_size 
 	const size_unity = 1000000
 
@@ -247,17 +244,16 @@ func Merge_Files(file_name, sortAlg string, max_size int, readData util.ReadData
 	var i int
 	for i = 0; i < fds_qtd; i++ {
 		sem_RAS.Acquire(ctx, 1) // pega uma permissao do sem
-		go Read_And_Sort(file_name, sortAlg, fds[i], readData, cmp)
+		go read_And_Sort(sortAlg, i, int64(i), fds[i], readData, writeData, cmp)
 	}
 
 	var output_name string
 	//controla a mesclagem de arquivos
 	for count := 0; count < fds_qtd-1; count += 1 {
-
-		sem_RAS.Acquire(ctx, 1) //Garante que o numero de threads esteja dentro do permitido
+		//Garante que o numero de threads esteja dentro do permitido
+		sem_RAS.Acquire(ctx, 1) 
 
 		//Chama o procedimento que mescla os arquivos
-
 		//So acontece quando pelo menos dois arquivos estiverem prontos
 		cond_files.L.Lock()
 
@@ -273,7 +269,7 @@ func Merge_Files(file_name, sortAlg string, max_size int, readData util.ReadData
 		output_name = "out" + strconv.Itoa(i)
 		i++
 		wg.Add(1)
-		go Merge_arrays(util.ReadIntegers, util.CompareInt, util.WriteIntegers, file1_name, file2_name, int64(n_max_elements), output_name)
+		go merge_arrays(file1_name, file2_name, output_name, MAX_SIZE, readData, writeData, cmp)
 	}
 
 	wg.Wait() //Espera todo mundo terminar
