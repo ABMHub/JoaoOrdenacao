@@ -17,7 +17,40 @@ import (
 type ReadData func(file *os.File, num int64) []T
 type Compare func(T, T) bool
 type WriteData func(file *os.File, array []T)
-type Fragment_files func(file *os.File, max_size int) [] *os.File
+type Fragment_files func(file_name string, elem_size int, max_size int64) ([]*os.File, []int)
+
+func FragmentBin(file_name string, elem_size int, max_size int64) ([]*os.File, []int) {
+	//Abre o arquivo para descobrir o tamanho
+	file, _ := os.Open(file_name)
+	//Normaliza max_size
+	max_size -= max_size % int64(elem_size)
+
+	//Descobre o tamanho do arquivo
+	stat, _ := file.Stat()
+	size := stat.Size()
+
+	file.Close()
+
+	//Define a quantidade de ponteiros para arquivo de acordo com o tamanho do elemento
+	fds_qtd := size / max_size
+	qtd_elem := max_size / int64(elem_size)
+
+	//Define um ponteiro de fds
+	fds := make([]*os.File, fds_qtd)
+	//Define o tamanho de conteudo dos file descriptors
+	size_fd := make([]int, fds_qtd)
+
+	for i := 0; i < int(fds_qtd); i++ {
+		// obtem os fds
+		fds[i], _ = os.Open(file_name)
+		fds[i].Seek(max_size*int64(i), 0)
+		
+		// obtem os tamanhos
+		size_fd[i] = int(qtd_elem)
+	}
+
+	return fds, size_fd
+}
 
 //Recebe o arquivo a ser lido e o tamanho em bytes do elemento que deve ser lido
 func ReadBytes(file *os.File, qtdBytes int) ([]byte, error) {

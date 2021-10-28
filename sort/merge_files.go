@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"sortAlgorithms/util"
 	"strconv"
@@ -31,7 +30,7 @@ var count_files int //quantidade de arquivos temporarios
 var files_queue util.List
 
 func merge_arrays(file1_n, file2_n, output_name string, max_size int64, readData util.ReadData,
-				writeData util.WriteData, cmp util.Compare) {
+	writeData util.WriteData, cmp util.Compare) {
 	file1, err1 := os.Open("temp" + string(os.PathSeparator) + file1_n + ".bin") // abre arquivo
 	if err1 != nil {
 		log.Fatal(err1)
@@ -162,7 +161,7 @@ func merge_arrays(file1_n, file2_n, output_name string, max_size int64, readData
 func read_And_Sort(sort_alg string, page int, num_elem int64, fds *os.File, readData util.ReadData, writeData util.WriteData, cmp util.Compare) {
 	// le os dados
 	arr := readData(fds, num_elem)
-	
+
 	//ordena os dados lidos
 	switch sort_alg {
 	case "quick-sort":
@@ -209,16 +208,16 @@ func read_And_Sort(sort_alg string, page int, num_elem int64, fds *os.File, read
 }
 
 // max_size eh em MB
-func Merge_Files(file_name, sortAlg string, max_size int, readData util.ReadData, cmp util.Compare, fragment util.Fragment_files, writeData util.WriteData) {
-	// unidade de medida para max_size 
+func Merge_Files(file_name, sortAlg string, elemen_size, max_size int, readData util.ReadData, cmp util.Compare, fragment util.Fragment_files, writeData util.WriteData) {
+	// unidade de medida para max_size
 	const size_unity = 1000000
 
 	// define a quantidade maxima de memoria
 	max_size = max_size * size_unity
-	
+
 	// abre arquivo
-	file, err := os.Open(file_name) 
-	if err != nil {               // se der erro cancela tudo
+	file, err := os.Open(file_name)
+	if err != nil { // se der erro cancela tudo
 		log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err) //
 		defer file.Close()                                                                     //
 	}
@@ -237,21 +236,21 @@ func Merge_Files(file_name, sortAlg string, max_size int, readData util.ReadData
 	sem_RAS = semaphore.NewWeighted(int64(sem_permissions_RAS))
 
 	// Obtem uma lista com os file descriptors necessario
-	fds := fragment(file, max_size)	
+	fds, size_fd := fragment(file_name, elemen_size, int64(max_size))
 	fds_qtd := len(fds)
 
 	//fragmenta e ordena os arquivos
 	var i int
 	for i = 0; i < fds_qtd; i++ {
 		sem_RAS.Acquire(ctx, 1) // pega uma permissao do sem
-		go read_And_Sort(sortAlg, i, int64(i), fds[i], readData, writeData, cmp)
+		go read_And_Sort(sortAlg, i, int64(size_fd[i]), fds[i], readData, writeData, cmp)
 	}
 
 	var output_name string
 	//controla a mesclagem de arquivos
 	for count := 0; count < fds_qtd-1; count += 1 {
 		//Garante que o numero de threads esteja dentro do permitido
-		sem_RAS.Acquire(ctx, 1) 
+		sem_RAS.Acquire(ctx, 1)
 
 		//Chama o procedimento que mescla os arquivos
 		//So acontece quando pelo menos dois arquivos estiverem prontos
@@ -269,7 +268,7 @@ func Merge_Files(file_name, sortAlg string, max_size int, readData util.ReadData
 		output_name = "out" + strconv.Itoa(i)
 		i++
 		wg.Add(1)
-		go merge_arrays(file1_name, file2_name, output_name, MAX_SIZE, readData, writeData, cmp)
+		go merge_arrays(file1_name, file2_name, output_name, int64(max_size), readData, writeData, cmp)
 	}
 
 	wg.Wait() //Espera todo mundo terminar
