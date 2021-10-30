@@ -14,9 +14,9 @@ import (
 func main() {
 	size := 4
 
-	sort.Merge_Files("Integerscpp2.bin", "quick-sort", size, 10, util.ReadIntegers, util.CompareInt, util.FragmentBin, util.WriteIntegers)
+	util.GenerateFiles("IntegersGo2.bin", 10000000, 1)
+	sort.Merge_Files("IntegersGo2.bin", "quick-sort", size, 10, util.ReadIntegers, util.CompareInt, util.FragmentBin, util.WriteIntegers)
 	util.SetThreadLimit(1)
-	//util.GenerateFiles(250000000)
 
 	file1, err1 := os.Open("Sorted.bin") // abre arquivo
 	if err1 != nil {                     // se der erro cancela tudo

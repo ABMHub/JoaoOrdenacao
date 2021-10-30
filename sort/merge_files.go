@@ -8,8 +8,7 @@ import (
 	"sortAlgorithms/util"
 	"strconv"
 	"sync"
-
-	//"sync"
+	"time"
 
 	"github.com/cheggaaa/pb"
 	"golang.org/x/sync/semaphore"
@@ -229,10 +228,14 @@ func read_And_Sort(sort_alg string, page int, num_elem int64, fds util.T, readDa
 	general_pbar.Increment()
 	fout.Close()
 	sem_RAS.Release(1)
+	wg.Done()
 }
 
 // max_size eh em MB
 func Merge_Files(file_name, sortAlg string, elemen_size, max_size int, readData util.ReadData, cmp util.Compare, fragment util.Fragment_files, writeData util.WriteData) {
+
+	init_time := time.Now()
+
 	// unidade de medida para max_size
 	const size_unity = 1000000
 
@@ -274,12 +277,14 @@ func Merge_Files(file_name, sortAlg string, elemen_size, max_size int, readData 
 	//fragmenta e ordena os arquivos
 	var i int
 	for i = 0; i < fds_qtd; i++ {
+		wg.Add(1)
 		sem_RAS.Acquire(ctx, 1) // pega uma permissao do sem
 		go read_And_Sort(sortAlg, i, int64(size_fd[i]), fds[i], readData, writeData, cmp)
 	}
 
 	var output_name string
 	//controla a mesclagem de arquivos
+
 	for count := 0; count < fds_qtd-1; count += 1 {
 		//Garante que o numero de threads esteja dentro do permitido
 		sem_RAS.Acquire(ctx, 1)
@@ -305,9 +310,16 @@ func Merge_Files(file_name, sortAlg string, elemen_size, max_size int, readData 
 
 	wg.Wait() //Espera todo mundo terminar
 
+	if fds_qtd == 1 {
+		output_name = "out" + strconv.Itoa(i-1)
+	}
+
 	//Renomeia o arquivo, move ele pra raiz e deleta a temp
 	os.Rename("temp"+string(os.PathSeparator)+output_name+".bin", "."+string(os.PathSeparator)+"Sorted"+".bin")
 	os.Remove("temp")
 
 	pPool.End()
+	fmt.Println(fds_qtd)
+	since := time.Since(init_time)
+	fmt.Printf("Tempo decorrido: %dm%ds\n", int(since.Minutes()), (int(since.Seconds()))%60)
 }

@@ -34,6 +34,9 @@ func FragmentBin(file_name string, elem_size int, max_size int64) ([]T, []int) {
 	//Define a quantidade de ponteiros para arquivo de acordo com o tamanho do elemento
 	fds_qtd := size / max_size
 	qtd_elem := max_size / int64(elem_size)
+	if fds_qtd == 0 {
+		fds_qtd = 1
+	}
 
 	//Define um ponteiro de fds
 	fds := make([]T, fds_qtd)
@@ -121,14 +124,14 @@ func ReadIntegers(file T, num int64) []T {
 	return arr
 }
 
-func GenerateFiles(n int64, random_seed int64) {
+func GenerateFiles(file_name string, n, random_seed int64) {
 	progress_bar := pb.New64(n)
 	progress_bar.Prefix("Generate Files")
 	progress_bar.ShowSpeed = false
 	progress_bar.ShowElapsedTime = true
 	progress_bar.Start()
 
-	ptr, err := os.Create("IntegersGo.bin")
+	ptr, err := os.Create(file_name)
 
 	if err != nil {
 		fmt.Println("erro")
