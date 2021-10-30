@@ -291,16 +291,44 @@ func TestQuickSortP(t *testing.T) {
 }
 
 func TestMergeFiles(t *testing.T) {
-	util.GenerateFiles("TestMergeFiles.bin", 200, 42)
+	util.GenerateFiles("TestMergeFiles.bin", 1000000, 42)
 
-	file1, err := os.Open("TestMergeFiles.bin")
+	file, err := os.Open("TestMergeFiles.bin")
 	if err != nil {
 		t.Error("Erro ao abrir o arquivo TestMergeFiles.bin")
 	}
 
-	x := util.ReadIntegers(file1, 200)
+	x := util.ReadIntegers(file, 1000000)
 
-	sort.Merge_Files("IntegersGo2.bin", "quick-sort", 4, 10, util.ReadIntegers, util.CompareInt, util.FragmentBin, util.WriteIntegers)
+	file.Close()
 
-	file2, err := os.Open("Sorted.bin")
+	sort.Merge_Files("TestMergeFiles.bin", "quick-sort", 4, 1, 4, util.ReadIntegers, util.CompareInt, util.FragmentBin, util.WriteIntegers)
+
+	file1, err1 := os.Open("Sorted.bin")
+	if err1 != nil {
+		t.Error("Erro ao abrir o arquivo Sorted.bin")
+	}
+
+	x1 := util.ReadIntegers(file1, 1000000)
+
+	file1.Close()
+
+	if !util.IsSorted(x1, util.CompareInt) || !util.IsPerm(x, x1) {
+		t.Error("Merge Files com Quicksort não funcionou")
+	}
+
+	sort.Merge_Files("TestMergeFiles.bin", "merge-sort", 4, 1, 4, util.ReadIntegers, util.CompareInt, util.FragmentBin, util.WriteIntegers)
+
+	file2, err2 := os.Open("Sorted.bin")
+	if err2 != nil {
+		t.Error("Erro ao abrir o arquivo Sorted.bin")
+	}
+
+	x2 := util.ReadIntegers(file2, 1000000)
+
+	file2.Close()
+
+	if !util.IsSorted(x2, util.CompareInt) || !util.IsPerm(x, x2) {
+		t.Error("Merge Files com Mergesort não funcionou")
+	}
 }
