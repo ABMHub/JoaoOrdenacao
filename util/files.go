@@ -10,6 +10,8 @@ import (
 
 	//"log"
 	"os"
+
+	"github.com/cheggaaa/pb"
 )
 
 type ReadData func(file T, num int64) []T
@@ -66,10 +68,6 @@ type Pair3 struct {
 	Fst, Snd int32
 }
 
-type lel struct {
-	ff int
-}
-
 // func WriteIntegers(file *os.File, arr []T) {
 // 	//buf := new(bytes.Buffer)
 
@@ -83,6 +81,7 @@ type lel struct {
 // }
 
 func WriteIntegers(file *os.File, arr []T) {
+	// fmt.Println("adasdasds")
 	t2 := make([]byte, len(arr)*4)
 
 	//t := *(*[] Pair3)(unsafe.Pointer(&arr))
@@ -97,7 +96,6 @@ func WriteIntegers(file *os.File, arr []T) {
 	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
-	//}
 }
 
 //Recebe o arquivo que sera lido e a quantidade de elementos a serem lidos
@@ -123,17 +121,33 @@ func ReadIntegers(file T, num int64) []T {
 	return arr
 }
 
-func GenerateFiles(n int64) {
+func GenerateFiles(n int64, random_seed int64) {
+	progress_bar := pb.New64(n)
+	progress_bar.Prefix("Generate Files")
+	progress_bar.ShowSpeed = false
+	progress_bar.ShowElapsedTime = true
+	progress_bar.Start()
+
 	ptr, err := os.Create("IntegersGo.bin")
+
 	if err != nil {
 		fmt.Println("erro")
 	}
 
+	m := n / 10000
+
+	rand.Seed(random_seed)
+
 	var i int64
-	for i = 0; i < n; i++ {
-		err := binary.Write(ptr, binary.LittleEndian, uint32(rand.Int()))
-		if err != nil {
-			fmt.Println("binary.Write failed:", err)
+	var j int64
+	a := make([]T, m)
+	for i < n {
+		for j = 0; j < m && i < n; j++ {
+			i++
+			a[j] = uint32(rand.Int())
+			progress_bar.Increment()
 		}
+		WriteIntegers(ptr, a[0:j])
 	}
+	progress_bar.Finish()
 }
