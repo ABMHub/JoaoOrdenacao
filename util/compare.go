@@ -9,5 +9,5 @@ func CompareInt(a, b T) bool {
 }
 
 func CompareFloat(a, b T) bool {
-	return a.(int) < b.(int) //deixa baixo
+	return a.(float32) < b.(float32) //deixa baixo
 }
