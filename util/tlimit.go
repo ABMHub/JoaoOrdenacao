@@ -8,7 +8,7 @@ var __T_counter__ int = 0
 var __T_limit int = 0
 
 func SetThreadLimit(limit int){
-	if(limit >= 1){
+	if(limit >= 0){
 		__T_limit=limit
 	}
 }
