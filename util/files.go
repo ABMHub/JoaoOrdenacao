@@ -8,18 +8,16 @@ import (
 	"io"
 	"math/rand"
 
-	//"unsafe"
-
 	//"log"
 	"os"
 )
 
-type ReadData func(file *os.File, num int64) []T
+type ReadData func(file T, num int64) []T
 type Compare func(T, T) bool
 type WriteData func(file *os.File, array []T)
-type Fragment_files func(file_name string, elem_size int, max_size int64) ([]*os.File, []int)
+type Fragment_files func(file_name string, elem_size int, max_size int64) ([]T, []int)
 
-func FragmentBin(file_name string, elem_size int, max_size int64) ([]*os.File, []int) {
+func FragmentBin(file_name string, elem_size int, max_size int64) ([]T, []int) {
 	//Abre o arquivo para descobrir o tamanho
 	file, _ := os.Open(file_name)
 	//Normaliza max_size
@@ -36,19 +34,17 @@ func FragmentBin(file_name string, elem_size int, max_size int64) ([]*os.File, [
 	qtd_elem := max_size / int64(elem_size)
 
 	//Define um ponteiro de fds
-	fds := make([]*os.File, fds_qtd)
+	fds := make([]T, fds_qtd)
 	//Define o tamanho de conteudo dos file descriptors
 	size_fd := make([]int, fds_qtd)
 
 	for i := 0; i < int(fds_qtd); i++ {
 		// obtem os fds
 		fds[i], _ = os.Open(file_name)
-		fds[i].Seek(max_size*int64(i), 0)
-		
+		fds[i].(*os.File).Seek(max_size*int64(i), 0)
 		// obtem os tamanhos
 		size_fd[i] = int(qtd_elem)
 	}
-
 	return fds, size_fd
 }
 
@@ -105,12 +101,13 @@ func WriteIntegers(file *os.File, arr []T) {
 }
 
 //Recebe o arquivo que sera lido e a quantidade de elementos a serem lidos
-func ReadIntegers(file *os.File, num int64) []T {
+func ReadIntegers(file T, num int64) []T {
 	var arr []T
 	var i int64
+	fd := file.(*os.File)
 	for i = 0; i < num; i++ {
 		//Pega o valor em bytes de um inteiro no arquivo e o erro que ocorreu
-		bytes, err := ReadBytes(file, 4)
+		bytes, err := ReadBytes(fd, 4)
 
 		//Se o erro indicar o EOF, dah um break no loop, dessa forma quando chegar no fim do arquivo
 		//o tamanho do vetor arr vai ser menor que num

@@ -158,7 +158,7 @@ func merge_arrays(file1_n, file2_n, output_name string, max_size int64, readData
 	Recebe como parametro um arquivo e um indice (page) a partir de qual parte desse arquivo
 	deve ordenar
 */
-func read_And_Sort(sort_alg string, page int, num_elem int64, fds *os.File, readData util.ReadData, writeData util.WriteData, cmp util.Compare) {
+func read_And_Sort(sort_alg string, page int, num_elem int64, fds util.T, readData util.ReadData, writeData util.WriteData, cmp util.Compare) {
 	// le os dados
 	arr := readData(fds, num_elem)
 
