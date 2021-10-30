@@ -102,3 +102,7 @@ func GenerateFiles(n int64) {
 		}
 	}
 }
+
+func ReadJson(*os.File) []util.T{
+	
+}
