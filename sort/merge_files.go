@@ -188,7 +188,7 @@ func read_And_Sort(sort_alg string, page int, num_elem int64, fds util.T, readDa
 	//ordena os dados lidos
 	switch sort_alg {
 	case "quick-sort":
-		Quicksort_F(arr, 0, len(arr)-1, cmp)
+		Quicksort_P(arr, 0, len(arr)-1, cmp)
 	case "merge-sort":
 		Mergesort_P(arr, cmp)
 	default:
