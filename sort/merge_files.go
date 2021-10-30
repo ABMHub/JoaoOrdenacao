@@ -23,8 +23,7 @@ var cond_files = &sync.Cond{} //variavel condicao para os arquivos
 var queueLock = &sync.Mutex{}
 var poolLock = &sync.Mutex{}
 
-const sem_permissions_RAS int = 12 //numero de permissoes que o semaforo Read_And_Sort
-var sem_RAS *(semaphore.Weighted)  //controla as threads Read_And_Sort
+var sem_RAS *(semaphore.Weighted) //controla as threads Read_And_Sort
 
 //var sem_files *(semaphore.Weighted)		//semaforo que controla os arquivos que ja podem ser mesclados
 
@@ -232,7 +231,7 @@ func read_And_Sort(sort_alg string, page int, num_elem int64, fds util.T, readDa
 }
 
 // max_size eh em MB
-func Merge_Files(file_name, sortAlg string, elemen_size, max_size int, readData util.ReadData, cmp util.Compare, fragment util.Fragment_files, writeData util.WriteData) {
+func Merge_Files(file_name, sortAlg string, elemen_size, max_size, number_of_processors int, readData util.ReadData, cmp util.Compare, fragment util.Fragment_files, writeData util.WriteData) {
 
 	init_time := time.Now()
 
@@ -241,13 +240,6 @@ func Merge_Files(file_name, sortAlg string, elemen_size, max_size int, readData 
 
 	// define a quantidade maxima de memoria
 	max_size = max_size * size_unity
-
-	// abre arquivo
-	file, err := os.Open(file_name)
-	if err != nil { // se der erro cancela tudo
-		log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err) //
-		defer file.Close()                                                                     //
-	}
 
 	//Inicializa a variavel condicao
 	cond_files = sync.NewCond(queueLock)
@@ -260,19 +252,17 @@ func Merge_Files(file_name, sortAlg string, elemen_size, max_size int, readData 
 	ctx := context.Background()
 
 	//semaforo que controla as threads da read and sort
-	sem_RAS = semaphore.NewWeighted(int64(sem_permissions_RAS))
+	sem_RAS = semaphore.NewWeighted(int64(number_of_processors))
 
 	// Obtem uma lista com os file descriptors necessario
-	fds, size_fd := fragment(file_name, elemen_size, int64(max_size))
+	fds, size_fd := fragment(file_name, number_of_processors, elemen_size, int64(max_size))
 	fds_qtd := len(fds)
 
 	// fmt.Println("comecando progressbar")
 	general_pbar = pb.New((fds_qtd * 2) - 1)
 	general_pbar.Prefix("Total")
 	general_pbar.ShowSpeed = false
-	// general_pbar.ShowElapsedTime = true
 	pPool = util.NewPBar(general_pbar)
-	// fmt.Println("comecando progressbar")
 
 	//fragmenta e ordena os arquivos
 	var i int
