@@ -13,9 +13,8 @@ import (
 
 func main() {
 	size := 4
-
-	util.GenerateFiles("IntegersGo2.bin", 10000000, 1)
-	sort.Merge_Files("IntegersGo2.bin", "quick-sort", size, 10, util.ReadIntegers, util.CompareInt, util.FragmentBin, util.WriteIntegers)
+	number_of_processors := 12
+	sort.Merge_Files("Integerscpp2.bin", "quick-sort", size, 12, number_of_processors, util.ReadIntegers, util.CompareInt, util.FragmentBin, util.WriteIntegers)
 	util.SetThreadLimit(1)
 
 	file1, err1 := os.Open("Sorted.bin") // abre arquivo
@@ -24,6 +23,6 @@ func main() {
 		defer file1.Close()                                                                     //
 	}
 
-	fmt.Println(util.ReadIntegers(file1, 10))
+	fmt.Println(util.ReadIntegers(file1, 100))
 	fmt.Println("oi")
 }

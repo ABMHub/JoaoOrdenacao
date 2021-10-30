@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-
-	//"log"
+	"math"
+	"log"
 	"os"
 
 	"github.com/cheggaaa/pb"
@@ -17,13 +17,25 @@ import (
 type ReadData func(file T, num int64) []T
 type Compare func(T, T) bool
 type WriteData func(file *os.File, array []T)
-type Fragment_files func(file_name string, elem_size int, max_size int64) ([]T, []int)
+type Fragment_files func(file_name string, number_of_processors, elem_size int, max_size int64) ([]T, []int)
 
-func FragmentBin(file_name string, elem_size int, max_size int64) ([]T, []int) {
+func FragmentBin(file_name string, number_of_processors, elem_size int, max_size int64) ([]T, []int) {
 	//Abre o arquivo para descobrir o tamanho
-	file, _ := os.Open(file_name)
+	file, err := os.Open(file_name)
+
+	if err != nil { // se der erro cancela tudo
+		log.Fatal("Erro na leitura do arquivo na FragmentBin\n", err) //
+		defer file.Close()                                          //
+	}
+
+	mmc := Mmc(elem_size, number_of_processors)
+
+	max_size -= max_size % int64(mmc)
+
 	//Normaliza max_size
-	max_size -= max_size % int64(elem_size)
+	if max_size < int64(elem_size) {
+		max_size = int64(elem_size)
+	}
 
 	//Descobre o tamanho do arquivo
 	stat, _ := file.Stat()
@@ -32,7 +44,7 @@ func FragmentBin(file_name string, elem_size int, max_size int64) ([]T, []int) {
 	file.Close()
 
 	//Define a quantidade de ponteiros para arquivo de acordo com o tamanho do elemento
-	fds_qtd := size / max_size
+	fds_qtd := int64(math.Ceil(float64(size) / float64(max_size)))
 	qtd_elem := max_size / int64(elem_size)
 	if fds_qtd == 0 {
 		fds_qtd = 1
@@ -70,18 +82,6 @@ func ReadBytes(file *os.File, qtdBytes int) ([]byte, error) {
 type Pair3 struct {
 	Fst, Snd int32
 }
-
-// func WriteIntegers(file *os.File, arr []T) {
-// 	//buf := new(bytes.Buffer)
-
-// 	for i := 0; i < len(arr); i++ {
-// 		err := binary.Write(file, binary.LittleEndian, arr[i].(uint32))
-// 		if err != nil {
-// 			fmt.Println("binary.Write failed:", err)
-// 		}
-// 	}
-
-// }
 
 func WriteIntegers(file *os.File, arr []T) {
 	// fmt.Println("adasdasds")
