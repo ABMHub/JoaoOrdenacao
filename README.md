@@ -4,10 +4,10 @@ Trabalho final de Linguagens de Programação, com o professor Marcelo Ladeira. 
 
 ## To-do
 
-- [ ] Implementar Quicksort ou MergeSort
+- [X] Implementar Quicksort ou MergeSort
 
-- [ ] Teste de validação da função de comparação
+- [X] Teste de validação da função de comparação
 
-- [ ] Teste de validação da função de ordenação
+- [X] Teste de validação da função de ordenação
 
-- [ ] Implementar o paralelismo
+- [X] Implementar o paralelismo
