@@ -137,6 +137,8 @@ func GenerateFiles(file_name string, n, random_seed int64) {
 		fmt.Println("erro")
 	}
 
+	defer ptr.Close()
+
 	m := n / 10000
 
 	rand.Seed(random_seed)
