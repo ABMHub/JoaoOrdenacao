@@ -6,7 +6,7 @@ import (
 )
 var tg sync.WaitGroup
 
-func Quicksort_H(arr []util.T, low, high int, cmp func(util.T, util.T) bool, p_threads int){
+func Quicksort_H(arr []util.T, low, high int, cmp util.Compare, p_threads int){
 	if low >= high {
 		return
 	}
@@ -26,7 +26,7 @@ func Quicksort_H(arr []util.T, low, high int, cmp func(util.T, util.T) bool, p_t
 	tg.Done()
 }
 
-func Quicksort_P(arr []util.T, low, high int, cmp func(util.T, util.T) bool) {
+func Quicksort_P(arr []util.T, low, high int, cmp util.Compare) {
 	Quicksort_H(arr,low,high,cmp,util.GetThreadLimit())
 	tg.Wait()
 }

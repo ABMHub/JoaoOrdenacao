@@ -33,6 +33,7 @@ var files_queue util.List
 
 func merge_arrays(file1_n, file2_n, output_name string, elem_size int, max_size int64, readData util.ReadData,
 	writeData util.WriteData, cmp util.Compare) {
+
 	file1, err1 := os.Open("temp" + string(os.PathSeparator) + file1_n + ".bin") // abre arquivo
 	if err1 != nil {
 		log.Fatal(err1)
@@ -146,16 +147,14 @@ func merge_arrays(file1_n, file2_n, output_name string, elem_size int, max_size 
 		inArr2 = nil //Zera o vetor do arquivo 2
 	}
 
-	//queueLock.Lock()
-	cond_files.L.Lock()
-	files_queue.Push_back(output_name)
-	//sem_files.Release(1)			//Significa que um arquivo foi adicionado na fila
-	count_files += 1 //Incrementa o numero de arquivos prontos
-	if count_files >= 2 {
-		cond_files.Signal()
-	}
-	cond_files.L.Unlock()
-	//queueLock.Unlock()
+	cond_files.L.Lock()							// Inicia uma regiao de exclusao mutua
+	files_queue.Push_back(output_name)			// Adiciona o arquivo gerado pela mescla na fila
+	count_files += 1 							// Incrementa o numero de arquivos prontos
+	
+	if count_files >= 2 {						// Se existirem ao menos dois arquivos prontos, acorda um processo 
+		cond_files.Signal()						// que possa estar parado na merge_files esperando para que haja arquivos para 
+	}											// mesclagem
+	cond_files.L.Unlock()						// Libera a regiao de exclusao mutua
 
 	//Fecha os arquivos
 	file1.Close()
@@ -231,34 +230,29 @@ func read_And_Sort(sort_alg string, page int, num_elem int64, fds util.T, readDa
 }
 
 // max_size eh em MB
-func Merge_Files(file_name, sortAlg string, elemen_size, max_size, number_of_processors int, readData util.ReadData, cmp util.Compare, fragment util.Fragment_files, writeData util.WriteData) {
-
-	init_time := time.Now()
-
-	// unidade de medida para max_size
-	const size_unity = 1000000
-
-	// define a quantidade maxima de memoria
-	max_size = max_size * size_unity
-
-	//Inicializa a variavel condicao
-	cond_files = sync.NewCond(queueLock)
-
-	//Inicializa a fila que vai conter os arquivos ja ordenados
-	files_queue = util.NewList()
+func Merge_Files(file_name, sortAlg string, elemen_size, max_size, number_of_processors int, 
+	readData util.ReadData, cmp util.Compare, fragment util.Fragment_files, writeData util.WriteData) {
+	init_time := time.Now()						
+	
+	const size_unity = 1000000						// unidade de medida para max_size
+	
+	max_size = max_size * size_unity				// define a quantidade maxima de memoria
+	
+	cond_files = sync.NewCond(queueLock)			//Inicializa a variavel condicao
+	
+	files_queue = util.NewList()					//Inicializa a fila que vai conter os arquivos ja ordenados
 	count_files = 0
 
-	//Contexto da thread principal
-	ctx := context.Background()
+	ctx := context.Background()						//Contexto da thread principal
 
 	//semaforo que controla as threads da read and sort
 	sem_RAS = semaphore.NewWeighted(int64(number_of_processors))
 
-	// Obtem uma lista com os file descriptors necessario
+	// Obtem uma lista com os files descriptors necessarios
 	fds, size_fd := fragment(file_name, number_of_processors, elemen_size, int64(max_size))
 	fds_qtd := len(fds)
 
-	// fmt.Println("comecando progressbar")
+	// Controla a barra de progresso
 	general_pbar = pb.New((fds_qtd * 2) - 1)
 	general_pbar.Prefix("Total")
 	general_pbar.ShowSpeed = false
@@ -276,21 +270,19 @@ func Merge_Files(file_name, sortAlg string, elemen_size, max_size, number_of_pro
 	//controla a mesclagem de arquivos
 
 	for count := 0; count < fds_qtd-1; count += 1 {
-		//Garante que o numero de threads esteja dentro do permitido
-		sem_RAS.Acquire(ctx, 1)
+		sem_RAS.Acquire(ctx, 1)								// Garante que o numero de threads esteja dentro do permitido
+		
+		cond_files.L.Lock()									// Da inicio a regiao de exclusao mutua
 
-		//Chama o procedimento que mescla os arquivos
-		//So acontece quando pelo menos dois arquivos estiverem prontos
-		cond_files.L.Lock()
-
-		for count_files < 2 {
-			cond_files.Wait()
-		}
-		file1_name := (files_queue.Pop_front()).(string)
+		for count_files < 2 {								// Caso o numero de arquivos prontos seja menor que 2, 
+			cond_files.Wait()								// Aguarda na variavel condicao
+		}		
+		
+		file1_name := (files_queue.Pop_front()).(string)	// Se chegou ate aqui, eh porque existem ao menos dois arquivos prontos
 		file2_name := (files_queue.Pop_front()).(string)
-		count_files -= 2
+		count_files -= 2									// Subtrai 2 da quantidade total de arquivos
 
-		cond_files.L.Unlock()
+		cond_files.L.Unlock()								// Da fim a regiao de exclusao mutua
 
 		output_name = "out" + strconv.Itoa(i)
 		i++
