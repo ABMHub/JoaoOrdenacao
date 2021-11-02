@@ -26,3 +26,11 @@ func Mdc(a, b int) int {
 func Mmc(a, b int) int {
 	return (a * b)/Mdc(a, b)
 }
+
+type Reddit struct {
+    Title     string  `json:"title"`
+    Author    string  `json:"author"`
+    Timestamp float64 `json:"timestamp"`
+    ID        string  `json:"id"`
+    Likes     int     `json:"likes"`
+}

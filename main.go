@@ -7,22 +7,44 @@ import (
 
 	"sortAlgorithms/sort"
 	"sortAlgorithms/util"
-	// "time"
-	// "github.com/cheggaaa/pb"
 )
 
 func main() {
-	size := 4
+	// External
+	elem_size := 4
 	number_of_processors := 12
-	sort.Merge_Files("Integersccp3.bin", "quick-sort", size, 10, number_of_processors, util.ReadIntegers, util.CompareInt, util.FragmentBin, util.WriteIntegers)
+	batch_size := 10
 	util.SetThreadLimit(1)
 
-	file1, err1 := os.Open("Sorted.bin") // abre arquivo
+	// Chama a ordenacao
+	sort.Merge_Files("Integerscpp2.bin", "quick-sort", elem_size, batch_size, number_of_processors, util.ReadIntegers, util.CompareInt, util.FragmentBin, util.WriteIntegers)
+	
+	// Primeiros 100 elementos do arquivo a ser ordenado
+	fmt.Print("\n\n100 primeiros inteiros a serem ordenados:\n\n")
+	file1, err1 := os.Open("Integerscpp2.bin") // abre arquivo
 	if err1 != nil {                     // se der erro cancela tudo
 		log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err1) //
 		defer file1.Close()                                                                     //
 	}
-
 	fmt.Println(util.ReadIntegers(file1, 100))
-	fmt.Println("oi")
+
+	// Mostra os 100 primeiros elementos depois de o arquivo ter sido ordenado
+	fmt.Print("\n\n100 primeiros inteiros depois de ordenados:\n\n")
+	file1, err1 = os.Open("Sorted.bin") // abre arquivo
+	if err1 != nil {                     // se der erro cancela tudo
+		log.Fatal("Erro na leitura do arquivo binario com os inteiros ordenados", err1) //
+		defer file1.Close()                                                                     //
+	}
+	fmt.Println(util.ReadIntegers(file1, 100))
+	
+	/* ###################################################################################### */
+
+	// Json
+	
+	// file1, err1 := os.Open("dump.json")
+	// if err1 != nil {
+	// 	log.Fatal("Erro na leitura do arquivo binario com os inteiros a serem ordenados", err1)
+	//  	defer file1.Close()    
+	// }
+	// sort.SortJson(file1, util.CompareLikes)
 }

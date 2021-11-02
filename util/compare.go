@@ -11,3 +11,7 @@ func CompareInt(a, b T) bool {
 func CompareFloat(a, b T) bool {
 	return a.(float32) < b.(float32) //deixa baixo
 }
+
+func CompareLikes(a,b T) bool{
+    return a.(Reddit).Likes > b.(Reddit).Likes
+}
