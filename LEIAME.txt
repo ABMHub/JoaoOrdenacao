@@ -1,0 +1,22 @@
+Para utilizar a ordenação externa é preciso passar como parâmetro:
+
+O nome do arquivo a ser ordenado
+O algoritmo de ordenação: "quick-sort" ou "merge-sort" 
+O tamanho dos elementos (caso ele seja fixo)
+O tamanho da quantidade de memória máxima dos arquivos que serão ordenados na RAM (batches para a ordenação externa)
+O número de processadores (threads) que se quer utilizar.
+
+Uma função capaz de decodificar o arquivo que se quer ordenar. Ela deve seguir o cabeçalho:
+type ReadData func(file T, num int64) []T
+Em que file é um ponteiro para arquivo e num é o número de elementos a serem lidos
+
+Uma função capaz de realizar a comparação de dois elementos
+type Compare func(T, T) bool
+
+Uma função capaz de codificar o arquivo de acordo com o tipo que está sendo usado na ReadData
+type WriteData func(file *os.File, array []T)
+Em que file é um ponteiro para arquivo e array[T] um vetor com os dados que devem ser escritos
+
+Função capaz de segmentar o arquivo caso a plataforma ainda não possua suporte para ele.
+type Fragment_files func(file_name string, number_of_processors, elem_size int, max_size int64) ([]T, []int)
+Em que file_name é o nome do arquivo, number_of_processors o número de processadores, elem_size o tamanho do elemento (caso seja fixo) e max_size o tamanho máximo de memória que pode ser disponibilizada para cada lote.

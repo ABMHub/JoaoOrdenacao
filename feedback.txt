@@ -1,0 +1,26 @@
+Alunos:
+Alexsander Correa de Oliveira - 19/0023562
+João Pedro Felix de Almeida - 19/0015292
+João Víctor Siqueira de Araujo - 19/0031026
+Lucas de Almeida Bandeira Macedo - 19/0047089
+Maria Eduarda Lacerda Dantas - 20/0067184
+
+Link da Wiki: https://lpunb.fandom.com/wiki/Golang_-_Grupo_2_-_2021/1
+Link do Vídeo: https://youtu.be/3vD6Q9cZvPo
+
+Na realização do projeto o trabalho em equipe foi definitivamente o que mais deu certo. Desde o início, sempre nos reunimos em video conferência para realização do mesmo. Vale ressaltar o empenho do grupo, uma vez que iniciamos o projeto dia 17 de setembro, como pode ser visto no histórico do github. Desde então, melhoramos o código continuamente.
+
+Uma vez que possuiamos uma regra de que só trabalhariamos no projeto se estivessemos em chamada, aproveitamos para desempenhar a metodologia de Pair Programming (programação em pares), que aprendemos na disciplina de engenharia de software.
+Assim, com frequência alta estavamos trabalhando em dupla, ou até em trio em algumas partes. Vale notar também que como o programa possui ao todo mais de mil linhas, é difícil dizer quem fez exatamente o que. Afinal, foram quase 2 meses trabalhando no projeto.
+
+Ainda sim, podemos destacar algumas contribuições principais, como o desenvolvimento do quicksort sequencial pelo João Victor e do mergesort sequencial junto com o João Pedro. A paralelização desses dois algoritmos teve sucesso com os esforços incansáveis do Alexsander e a corretude na fase inicial foi graças aos vários testes desenvolvidos pelo Lucas. A Maria por sua vez correu atrás do dump para servir de modelo para dados para ordenação enquanto João Pedro e Lucas desenvolviam a função controladora da ordenação externa (merge files, apresentada no vídeo). Além disso, Alexsander desenvolveu o suporte ao Json e juntamente com João Pedro foram capazes de chegar em um algoritmo rápido de escrita de dados no disco, essencial para a ordenação externa. João Victor foi o principal responsável pelo desenvolvimento da função merge arrays (mostrada no vídeo), que é quem de fato permitia que os arquivos ordenados pudessem ser mesclados. 
+Lucas também foi responsável pela implementação da barra de progresso que permite o monitoramento da ordenação externa, essencial para que o usuário possa ter um feedback da execução. João Víctor por sua vez assumiu a etapa final de validação aumentando a base de testes iniciada pelo Lucas, bem como trabalhou para alcançar um resultado satisfatório no processo de leitura de arquivos.
+Vale ressaltar também o desenvolvimento feito pelo Alexsander da fila capaz de controlar quais arquivos temporários estariam prontos para serem ordenados, bem como da função de fragmentação de arquivos binários que dá suporte a ordenação externa desenvolvida pelo Lucas e João Pedro. Alexsander e João Víctor também foram responsáveis pelas funções de comparação genéricas e funções auxiliares para os testes de validação.
+
+Já no que tange a apresentação do projeto, a criação dos slides ficou por conta do Lucas, o roteiro do vídeo pelo João Pedro e a formatação para a wiki pelo Alexsander e João Víctor. A Maria contribuiu na parte do vídeo. Os textos da wiki foram criados em conjunto pelo grupo, de modo que não seja relevante pontuar o que cada um fez.
+
+De maneira geral o projeto foi divertido e aprendemos bastante, não é atoa que gastamos tanto tempo e com tanto empenho.
+
+Foi o trabalho mais legal que fizemos em grupo nesse semestre, obrigado professor :)
+
+
